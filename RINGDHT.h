@@ -65,11 +65,11 @@ public:
 				}
 				else
 					flag = 1;
-			}while (!flag);
+			} while (!flag);
 
 		}
 		else
-			NumberOfMachines = identifier_space+1; // default number
+			NumberOfMachines = identifier_space + 1; // default number
 
 		createDHT(identifier_space, NumberOfMachines);
 
@@ -80,7 +80,7 @@ public:
 	void showNodes(); //displays each node and its flag (machine or nah)
 
 	void randomizeMachines();
-	
+
 	void manualAssignMachines();
 
 	void insertFile();
@@ -90,14 +90,14 @@ public:
 void RingDHT::createDHT(int idspace, int machines) {
 	int total = pow(2, idspace);
 	cout << "-------------------------------------" << endl;
-	cout << "Identifier Space: " << idspace <<"("<<total<<")"<< endl;
+	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
 	cout << "Total Machines: " << machines << endl;
 	cout << "-------------------------------------" << endl;
 	Node* newNode = new Node; head = newNode;
 	Node* current = head;
-	int count = 0; 
+	int count = 0;
 	while (count < total) {
-		cout << "= Adding: "<<count << endl;
+		cout << "= Adding: " << count << endl;
 		Node* newNode = new Node;
 		current->next = newNode;
 		current = current->next;
@@ -135,18 +135,29 @@ void RingDHT::showNodes() {
 	cout << "--------------------------------" << endl;
 }
 
-void RingDHT :: randomizeMachines() {
+void RingDHT::randomizeMachines() {
 	int total = pow(2, identifier_space);
 	cout << "\n> Randomizing Machines . . ." << endl << endl;
-	int m = 0;
-	while (m < NumberOfMachines) {
-		int randindx = rand() % total;
-		Node* current = head; int i = 0;
-		while (i < randindx) {
-			current = current->next; i++;
+	int m = total/NumberOfMachines;
+	int i = 0;
+	Node* current = head;
+	int machines_installed = 0;
+
+	while (i < total) 
+	{
+		int j = i+m;
+
+		while (i < j) {
+			current = current->next;
+			i++;
 		}
+		
 		current->isMachine = true;
-		m++;
+		machines_installed++;
+		if (machines_installed == NumberOfMachines)
+		{
+			break;
+		}
 	}
 }
 
@@ -194,8 +205,8 @@ void RingDHT::insertFile() {
 	}
 	i = 0;
 	while (!getName.empty()) {
-		name+=getName.top();
-		getName.pop(); 
+		name += getName.top();
+		getName.pop();
 		if (getName.top() == '.')
 			break;
 	} //name will have the file name (in case if needed later though the hash will be generated thru content)
@@ -206,7 +217,7 @@ void RingDHT::insertFile() {
 		fileContent += line; // Concatenate each line
 	}
 	string choice;
-	cout << "> Show Content (File :"<<name<<") ? YES or NO" << endl;
+	cout << "> Show Content (File :" << name << ") ? YES or NO" << endl;
 	cin >> choice; cout << endl;
 	if (choice == "yes" || choice == "YES") {
 		cout << ">>";
@@ -218,7 +229,7 @@ void RingDHT::insertFile() {
 	cout << "> Storing on Node_" << fileKey << endl;
 
 	Node* current = head; int indx = 0;
-	while ((indx++) <= fileKey) 
+	while ((indx++) <= fileKey)
 		current = current->next;
 
 	current->key = fileKey;
