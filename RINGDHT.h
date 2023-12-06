@@ -246,3 +246,9 @@ void RingDHT::insertFile() {
 	// still incomplete
 
 }
+
+//Left:
+//SHA-1 Implementatiom
+//adding and removing machines (new)
+//Routing Tables
+//Btree Working
