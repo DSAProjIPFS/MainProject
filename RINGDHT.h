@@ -139,8 +139,8 @@ void RingDHT::randomizeMachines() {
 	int total = pow(2, identifier_space);
 	cout << "\n> Randomizing Machines . . ." << endl << endl;
 	int m = total/NumberOfMachines;
-	int i = 0;
-	Node* current = head;
+	int i = -1;
+	Node* current = nullptr;
 	int machines_installed = 0;
 
 	while (i < total) 
@@ -148,7 +148,14 @@ void RingDHT::randomizeMachines() {
 		int j = i+m;
 
 		while (i < j) {
-			current = current->next;
+			if (current)
+			{
+				current = current->next;
+			}
+			else
+			{
+				current = head;
+			}
 			i++;
 		}
 		
@@ -156,6 +163,7 @@ void RingDHT::randomizeMachines() {
 		machines_installed++;
 		if (machines_installed == NumberOfMachines)
 		{
+			cout << "aa" << endl;
 			break;
 		}
 	}
