@@ -232,7 +232,7 @@ void RingDHT::insertFile() {
 		cout << fileContent << endl << endl;
 	}
 	int total = pow(2, identifier_space);
-	int fileKey = getHash(fileContent, total);
+	long long int fileKey = getHash(fileContent);
 
 	cout << "> Storing on Node_" << fileKey << endl;
 
@@ -246,9 +246,3 @@ void RingDHT::insertFile() {
 	// still incomplete
 
 }
-
-//Left:
-//SHA-1 Implementatiom
-//adding and removing machines (new)
-//Routing Tables
-//Btree Working
