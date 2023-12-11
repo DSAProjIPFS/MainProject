@@ -6,6 +6,7 @@ using namespace std;
 class BTreeNode {
 public:
 	int* keys; //N size
+	string* paths;
 	int size; //varies
 	int currsize;
 	int min;
@@ -15,125 +16,91 @@ public:
 
 
 	BTreeNode() {
-		size = 16; //default (?)
-		min = (16/2)-1;
+		size = 3; // Default (?)
+		min = (3 / 2) - 1;
 		keys = new int[size - 1];
+		paths = new string[size]; // Adjusted to size
 		child = new BTreeNode * [size];
-		parent = NULL;
+		parent = nullptr;
 		isLeaf = true;
 		currsize = 0;
 	}
 
 	BTreeNode(int n) {
 		size = n;
-		min = (n) / 2;
+		min = (n) / 2 - 1;
 		keys = new int[size - 1];
+		paths = new string[size]; // Adjusted to size
 		child = new BTreeNode * [size];
 		currsize = 0;
 	}
-	void Not_full(int k)
-	{
+	void Not_full(int k, string p) {
 		int i = currsize - 1;
 
-		if (isLeaf == true)
-		{
-			while (i >= 0 && keys[i] > k)
-			{
+		if (isLeaf == true) {
+			while (i >= 0 && keys[i] > k) {
 				keys[i + 1] = keys[i];
+				paths[i + 1] = paths[i];
 				i--;
 			}
-
 
 			keys[i + 1] = k;
+			paths[i + 1] = p;
 			currsize = currsize + 1;
 		}
-		else // If this node is not isLeaf
-		{
-			// child which will have new key
-			while (i >= 0 && keys[i] > k)
-			{
+		else {
+			while (i >= 0 && keys[i] > k) {
 				i--;
 			}
 
-			// codition to check if child is full
-			if (child[i + 1]->currsize == size - 1)
-			{
-				BTreeNode* temp = new BTreeNode(child[i + 1]->size);
-				temp->isLeaf = child[i + 1]->isLeaf;
-				temp->currsize = min - 1;
+			if (child[i + 1]->currsize == 2 * min - 1) {
+				splitChild(i + 1, child[i + 1]);
 
-				for (int j = 0; j < min - 1; j++)
-					temp->keys[j] = child[i + 1]->keys[j + min];
-
-				if (child[i + 1]->isLeaf == false)
-				{
-					for (int j = 0; j < min; j++)
-						temp->child[j] = child[i + 1]->child[j + min];
-				}
-
-				child[i + 1]->currsize = min - 1;
-
-
-				for (int j = currsize; j >= i + 2; j--)
-				{
-					child[j + 1] = child[j];		//space for new child
-				}
-
-
-				child[i + 1] = temp;
-
-
-				for (int j = currsize - 1; j >= i + 1; j--)
-					keys[j + 1] = keys[j];
-
-
-				keys[i + 1] = child[i + 1]->keys[min - 1];
-
-				currsize = currsize + 1;
-
-
-
-				if (keys[i + 1] < k)
-				{
+				if (keys[i + 1] < k) {
 					i++;
 				}
 			}
-			child[i + 1]->Not_full(k);
+
+			child[i + 1]->Not_full(k, p);
 		}
 	}
 
-	void splitChild(int i, BTreeNode* Node)
-	{
+	void splitChild(int i, BTreeNode* Node) {
 		BTreeNode* temp = new BTreeNode(Node->size);
 		temp->isLeaf = Node->isLeaf;
-		temp->currsize = min - 1;
+		temp->currsize = min;
 
-		for (int j = 0; j < min - 1; j++)
+		for (int j = 0; j < min; j++) {
 			temp->keys[j] = Node->keys[j + min];
-
-		if (Node->isLeaf == false)
-		{
-			for (int j = 0; j < min; j++)
-				temp->child[j] = Node->child[j + min];
+			temp->paths[j] = Node->paths[j + min];
 		}
-		Node->currsize = min - 1;
 
-		for (int j = currsize; j >= i + 1; j--)
+		if (Node->isLeaf == false) {
+			for (int j = 0; j < min + 1; j++) {
+				temp->child[j] = Node->child[j + min];
+			}
+		}
+
+		Node->currsize = min;
+
+		for (int j = currsize; j >= i + 1; j--) {
 			child[j + 1] = child[j];
+		}
 
 		child[i + 1] = temp;
 
-		for (int j = currsize - 1; j >= i; j--)
+		for (int j = currsize - 1; j >= i; j--) {
 			keys[j + 1] = keys[j];
+			paths[j + 1] = paths[j];
+		}
 
 		keys[i] = Node->keys[min - 1];
+		paths[i] = Node->paths[min - 1];
 
 		currsize = currsize + 1;
 	}
 
-
-
-	int KeyIndx(int key) { //find key
+	int KeyIndx(int key) {
 		int indx = 0;
 		while (indx < currsize && keys[indx] < key) {
 			indx++;
@@ -159,6 +126,7 @@ public:
 				int n = indx + 1;
 				while (n < currsize) {
 					keys[n - 1] = keys[n];
+					paths[n - 1] = paths[n];
 					n++;
 				}
 				currsize--;
@@ -169,11 +137,16 @@ public:
 
 				if (child[indx]->currsize >= min) { //case 1, k precedes
 					int pred = getPredecessor(indx);
+					string predpath = getPredecessorPath(indx);
 					keys[indx] = pred;
+					paths[indx] = predpath;
+
 					child[indx]->removeKey(pred);
 				}
 				else if (child[indx + 1]->currsize >= min) { //case 2, k succeeds
 					int succ = getSuccessor(indx);
+					string succpath = getSuccessorPath(indx);
+					paths[indx] = succpath;
 					keys[indx] = succ;
 					child[indx + 1]->removeKey(succ);
 				}
@@ -210,6 +183,7 @@ public:
 		BTreeNode* s = child[indx + 1];
 
 		c->keys[min - 1] = keys[indx];
+		c->paths[min - 1] = paths[indx];
 
 		if (!c->isLeaf) {
 			for (int i = 0; i <= s->currsize; i++) {
@@ -219,10 +193,12 @@ public:
 
 		for (int i = 0; i < s->currsize; i++) {
 			c->keys[i + min] = s->keys[i];
+			c->paths[i + min] = s->paths[i];
 		}
 
 		for (int i = indx + 1; i < currsize; i++) {
 			keys[i - 1] = keys[i];
+			paths[i - 1] = paths[i];
 		}
 
 		for (int i = indx + 2; i <= currsize; i++)
@@ -241,6 +217,13 @@ public:
 		}
 		return curr->keys[curr->currsize - 1];
 	}
+	string getPredecessorPath(int indx) {
+		BTreeNode* curr = child[indx];
+		while (!child[indx]->isLeaf) {
+			curr = curr->child[curr->currsize];
+		}
+		return curr->paths[curr->currsize - 1];
+	}
 
 	int getSuccessor(int indx) {
 		BTreeNode* curr = child[indx];
@@ -249,6 +232,15 @@ public:
 			curr = curr->child[0];
 		}
 		return curr->keys[0];
+	}
+
+	string getSuccessorPath(int indx) {
+		BTreeNode* curr = child[indx];
+		while (!child[indx]->isLeaf) {
+			cout << "p" << endl;
+			curr = curr->child[0];
+		}
+		return curr->paths[0];
 	}
 
 	void fillNode(int indx) {
@@ -267,8 +259,10 @@ public:
 	void borrowfromLeftSibling(int indx) {
 		for (int i = child[indx]->currsize - 1; i >= 0; i--) { //moving keys one index ahead (to free space for the borrowed one at 0th index)
 			child[indx]->keys[i + 1] = child[indx]->keys[i];
-			child[indx]->keys[0] = keys[indx - 1]; //adding parent value at the 0th index
+			child[indx]->paths[i + 1] = child[indx]->paths[i];
 		}
+		child[indx]->keys[0] = keys[indx - 1]; //adding parent value at the 0th index
+		child[indx]->paths[0] = paths[indx - 1];
 
 		if (!child[indx]->isLeaf) {
 			for (int i = child[indx]->currsize; i >= 0; i--) { //if it ain't a leaf, moving all child pointer one step ahead too
@@ -278,12 +272,14 @@ public:
 		}
 
 		keys[indx - 1] = child[indx - 1]->keys[child[indx - 1]->currsize - 1]; //replacing the parent with the key from sibling (the one borrowed from)
+		paths[indx - 1] = child[indx - 1]->paths[child[indx - 1]->currsize - 1];
 		child[indx]->currsize++; //the filled node now has one more value
 		child[indx - 1]->currsize--; //the node from which the value is borrowed now has one less
 	}
 
 	void borrowfromRightSibling(int indx) {
 		child[indx]->keys[child[indx]->currsize] = keys[indx]; //adding parent value at the last index
+		child[indx]->paths[child[indx]->currsize] = paths[indx];
 
 		if (!child[indx]->isLeaf) {
 			child[indx]->child[child[indx]->currsize + 1] = child[indx + 1]->child[0];
@@ -291,9 +287,12 @@ public:
 
 
 		keys[indx] = child[indx - 1]->keys[0]; //replacing the parent with the key from sibling (the one borrowed from)
+		paths[indx] = child[indx - 1]->paths[0];
 
-		for (int i = 1; i < child[indx + 1]->currsize; ++i) //moving keys behind to fill the gap (in the one borrowed from)
+		for (int i = 1; i < child[indx + 1]->currsize; ++i) {//moving keys behind to fill the gap (in the one borrowed from)
 			child[indx + 1]->keys[i - 1] = child[indx + 1]->keys[i];
+			child[indx + 1]->paths[i - 1] = child[indx + 1]->paths[i];
+		}
 		if (!child[indx + 1]->isLeaf)
 		{
 			for (int i = 1; i <= child[indx + 1]->currsize; ++i)
@@ -314,13 +313,14 @@ public:
 		this->size = size;
 		root = nullptr;
 	}
-	void insert(int k)
+	void insert(int k, const string &directory)
 	{
 
 		if (root == NULL)
 		{
 			root = new BTreeNode(size);
 			root->isLeaf = true;
+			root->paths[0] = directory;
 			root->keys[0] = k;
 			root->currsize = 1;
 		}
@@ -330,7 +330,7 @@ public:
 			if (root->currsize == root->min - 1)
 			{
 				BTreeNode* s = new BTreeNode(size);
-				s->isLeaf = false;
+				s->isLeaf = false; 
 				s->child[0] = root;
 
 				s->splitChild(0, root);
@@ -339,12 +339,12 @@ public:
 				int i = 0;
 				if (s->keys[0] < k)
 					i++;
-				s->child[i]->Not_full(k);
+				s->child[i]->Not_full(k,directory);
 				root = s;
 			}
 			else
 			{
-				root->Not_full(k);
+				root->Not_full(k,directory);
 			}
 		}
 	}
@@ -371,3 +371,28 @@ public:
 
 };
 
+void printBTree(BTreeNode* node, int level = 0) {
+	if (node != nullptr) {
+		cout << "Level " << level << ": ";
+		for (int i = 0; i < node->currsize; ++i) {
+			cout << node->keys[i] << " ";
+		}
+		cout << endl;
+
+		++level;
+		if (!node->isLeaf) {
+			for (int i = 0; i <= node->currsize; ++i) {
+				printBTree(node->child[i], level);
+			}
+		}
+	}
+}
+
+void printBTree(BTree* btree) {
+	if (btree != nullptr && btree->root != nullptr) {
+		printBTree(btree->root);
+	}
+	else {
+		cout << "The B-tree is empty." << endl;
+	}
+}
