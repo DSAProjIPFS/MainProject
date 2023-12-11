@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include <time.h>
 #include <cstdlib>
 #include <cmath>
@@ -32,14 +34,13 @@ public:
 	Node* prev;
 
 	Node() {
-		btree = NULL;
 		isMachine = false;
 		key = 0; value.content = '0';
 		value.directory = '0';
 	}
 
 	Node(int k, string val, bool flag) { //just in case needed
-		btree = NULL;
+		
 		isMachine = flag;
 		key = k; value.content = val;
 	}
@@ -53,6 +54,8 @@ public:
 
 	RingDHT() { //is == identifier space (default 16)
 		string choice;
+		cout << endl;
+		cout << "========================================================================================================================" << endl << endl;
 		cout << "> Do you want to specify the identifier space? YES or NO" << endl;
 		cin >> choice;
 		if (choice == "yes" || choice == "YES") {
@@ -119,7 +122,6 @@ void RingDHT::createDHT(int idspace, int machines) {
 	Node* current = head;
 	int count = 0;
 	while (count < total) {
-		cout << "= Adding: " << count << endl;
 		Node* newNode = new Node;
 		current->next = newNode;
 		current = current->next;
@@ -130,6 +132,7 @@ void RingDHT::createDHT(int idspace, int machines) {
 	int c;
 	cout << "> Do you want to Automatically or Manually assign IDs to Machines? 1. Automatically :: 2. Manually" << endl;
 	cin >> c;
+	system("cls");
 	if (c == 1)
 		randomizeMachines();
 	else
@@ -139,6 +142,8 @@ void RingDHT::createDHT(int idspace, int machines) {
 	showNodes();
 
 	cout << "Ring DHT Setup Successful, Proceeding..." << endl;
+	this_thread::sleep_for(chrono::seconds(2));
+	system("cls");
 	return;
 }
 
@@ -164,6 +169,7 @@ void RingDHT::showNodes() {
 void RingDHT::randomizeMachines() {
 	int total = pow(2, identifier_space);
 	cout << "\n> Randomizing Machines . . ." << endl << endl;
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	int m = total / NumberOfMachines;
 	int i = -1;
 	Node* current = nullptr;
@@ -190,26 +196,38 @@ void RingDHT::randomizeMachines() {
 		if (machines_installed == NumberOfMachines){
 			break;}
 	}
+	cout << "Proceeding..." << endl;
 }
 
 void RingDHT::manualAssignMachines() {
 	int total = pow(2, identifier_space);
-	cout << "\n> Assign Manual IDs . . ." << endl;
+	bool aFlag = false;
+	cout << "\n> Assign Manual IDs . . ." << endl << endl;
 	int m = 1; int assign = 0;
+	Node* current;
 	while (m <= NumberOfMachines) {
-		cout << "Machine_" << m << " :: Assign ID: ";//ASSIGN IDS THRU NAME??????????????????
-		cin >> assign;
-		Node* current = head; int i = 0;
-		while (i < assign) {
-			current = current->next;
-			i++;
-		}
+		do {
+		aFlag = false;
+			cout << "Machine_" << m << " :: Assign ID: ";
+			cin >> assign;
+			current = head; int i = 0;
+			while (i < assign) {
+				current = current->next;
+				i++;
+			}
+			if (current->isMachine) {
+				cout << "> ID is already a Machine, Enter again." << endl;
+				aFlag = true;
+
+			}
+		} while (aFlag);
 		current->value.content = getRandomName();
 		current->key = assign;
 		
 		current->isMachine = true;
 		m++;
 	}
+	system("cls");
 }
 
 void RingDHT::insertFile() {
@@ -261,6 +279,7 @@ void RingDHT::insertFile() {
 	}
 	int total = pow(2, identifier_space);
 	long long int fileKey = getHash(fileContent);
+	long long int SHAhash = fileKey;
 	fileKey = fileKey % total;
 
 	cout << "> Storing on Node_" << fileKey << endl;
@@ -276,10 +295,13 @@ void RingDHT::insertFile() {
 	while (!current->isMachine) {
 		current = current->next;
 	}
-
 	cout << "> Managed by Machine_\"" << current->value.content << "\"" << endl;
-	//current->btree.insert(fileKey); //store value where <?>
-	//insert in BTree of THAT Machine NEXT (current)
+	current->btree.insert(fileKey,path); //store value where <?>
+	cout << "------------------------------------------------------------------" << endl;
+	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
+	cout << "--------------------------------------------------------------------" << endl;
+	cout << "Press any key to Proceed..." << endl;
+	_getch();
 
 	//done after that
 
