@@ -9,6 +9,8 @@
 #include <fstream>
 #include <stack>
 #include <string>
+#include <string>
+
 #include "BTree.h"
 #include "Hashing.h"
 using namespace std;
@@ -30,6 +32,7 @@ public:
 	bool isMachine;
 	Node* next;
 	Node* prev;
+	int indx;
 
 	Node() {
 		isMachine = false;
@@ -107,7 +110,6 @@ public:
 
 	void showDirectories();
 
-
 };
 
 void RingDHT::createDHT(int idspace, int machines) {
@@ -116,12 +118,14 @@ void RingDHT::createDHT(int idspace, int machines) {
 	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
 	cout << "Total Machines: " << machines << endl;
 	cout << "-------------------------------------" << endl;
-	Node* newNode = new Node; head = newNode;
+	Node* newNode = new Node; newNode->indx = 0; head = newNode;
 	Node* current = head;
 	int count = 0;
 	while (count < total) {
 		Node* newNode = new Node;
+		newNode->indx = count + 1;
 		current->next = newNode;
+		newNode->prev = current;
 		current = current->next;
 		count++;
 	}
@@ -281,20 +285,24 @@ void RingDHT::insertFile() {
 	fileKey = fileKey % total;
 
 	cout << "> Storing on Node_" << fileKey << endl;
-
+	// for now i'm using basic way, instead of routing
 	Node* current = head; int indx = 0;
 	while ((indx++) < fileKey)
 		current = current->next;
-
-	current->key = fileKey; 
-	current->value.content = fileContent;
-	current->value.directory = path; 
+	if (current->isMachine) {
+		current->btree.insert(fileKey, path);
+	}
+	else {
+		current->key = fileKey;
+		current->value.content = fileContent;
+		current->value.directory = path;
+	}
 
 	while (!current->isMachine) {
 		current = current->next;
 	}
 	cout << "> Managed by Machine_\"" << current->value.content << "\"" << endl;
-	current->btree.insert(fileKey,path); //store value where <?>
+	current->btree.insert(fileKey,path);
 	cout << "------------------------------------------------------------------" << endl;
 	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
 	cout << "--------------------------------------------------------------------" << endl;
@@ -394,10 +402,36 @@ void RingDHT::showDirectories() {
 }
 
 void RingDHT::removeFile() {
-	string choice;
-	cout << "> Enter the content of the file to be deleted: " << endl;
+	//for a starter, we'll be randomizing the current machine from which user is searching
+	Node* currentMachine = head;;
+	int randMachine = rand() % NumberOfMachines;
+	int i = 0;
+	while (i < randMachine) {
+		currentMachine = currentMachine->next;
+		if (currentMachine->isMachine)
+			i++;
+	}
+	int key;
+	cout << "> Current Machine Node: " << randMachine;
+	cout << "> Enter the Key of The File to remove: " << endl;
+	cin >> key;
+	//there may be a possibility that the key doesn't exist (in that case direct to the start)
+
+	int choice;
+	cout << "> Enter the Key of the file to be removed" << endl;
 	cin >> choice;
-	//to be deleted using the content? name? directory?
+
+	//case 1 - current machine contains the key i.e key<=machine_key
+	Node* prevMachine = currentMachine->prev;
+	while (!prevMachine->isMachine) {
+		prevMachine = prevMachine->prev;
+	}
+	int prevKey = prevMachine->indx;
+	//i've not tested this yet (will do later)
+	if (key <= currentMachine->indx && key > prevMachine->indx) {
+		currentMachine->btree.remove(key);
+	}
+	//all other case need routing table
 
 }
 
@@ -408,8 +442,9 @@ void RingDHT::removeFile() {
 
 //Left:
 /*
--> BTree Insertion & Deletion (Implementation is Done, but inserting actual keys/directories left)
--> Routing tables
--> Searching (will be possible after routing tables are implemented)
--> some functions i made are incomplete, will complete em too
+-> Btree testing
+-> routing table
+-> insertion is completed thru normal way (traverse every node one by one), will do with routing table later
+-> same case with deletion
+-> searching 
 */
