@@ -9,8 +9,6 @@
 #include <fstream>
 #include <stack>
 #include <string>
-#include <string>
-
 #include "BTree.h"
 #include "Hashing.h"
 using namespace std;
