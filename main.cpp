@@ -50,7 +50,7 @@ void MainMenu(RingDHT* DHT) {
 			break;
 		case 2: DHT->removeFile();
 			break;
-		case 3: DHT->CreateTable();
+		case 3: DHT->PrintParticularTable();
 			break;
 		case 4:
 			DHT->insertMachine();
