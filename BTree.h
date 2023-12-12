@@ -16,8 +16,8 @@ public:
 
 
 	BTreeNode() {
-		size = 3; // Default (?)
-		min = (3 / 2) - 1;
+		size = 4; // Default (?)
+		min = (size + 1) / 2;
 		keys = new int[size - 1];
 		paths = new string[size]; // Adjusted to size
 		child = new BTreeNode * [size];
@@ -28,8 +28,8 @@ public:
 
 	BTreeNode(int n) {
 		size = n;
-		min = (n) / 2 - 1;
-		keys = new int[size - 1];
+		min = (size + 1) / 2;
+		keys = new int[size - 1] {0};
 		paths = new string[size]; // Adjusted to size
 		child = new BTreeNode * [size];
 		currsize = 0;
@@ -53,7 +53,7 @@ public:
 				i--;
 			}
 
-			if (child[i + 1]->currsize == 2 * min - 1) {
+			if (child[i + 1]->currsize == size) {
 				splitChild(i + 1, child[i + 1]);
 
 				if (keys[i + 1] < k) {
@@ -66,6 +66,7 @@ public:
 	}
 
 	void splitChild(int i, BTreeNode* Node) {
+		
 		BTreeNode* temp = new BTreeNode(Node->size);
 		temp->isLeaf = Node->isLeaf;
 		temp->currsize = min;
@@ -81,9 +82,9 @@ public:
 			}
 		}
 
-		Node->currsize = min;
+		Node->currsize = min-1;
 
-		for (int j = currsize; j >= i + 1; j--) {
+		for (int j = currsize; j >= i+1 ; j--) {
 			child[j + 1] = child[j];
 		}
 
@@ -301,6 +302,7 @@ public:
 		child[indx]->currsize++; //the filled node now has one more value
 		child[indx - 1]->currsize--; //the node from which the value is borrowed now has one less
 	}
+	
 };
 
 class BTree {
@@ -308,14 +310,14 @@ public:
 	BTreeNode* root;
 	int size;
 
-	BTree(int size = 16)
+	BTree(int size = 8)
 	{
 		this->size = size;
 		root = nullptr;
 	}
-	void insert(int k, const string &directory)
+	void insert(int k, const string& directory)
 	{
-
+		cout << k << endl;
 		if (root == NULL)
 		{
 			root = new BTreeNode(size);
@@ -327,10 +329,10 @@ public:
 		else // If tree is not empty
 		{
 
-			if (root->currsize == root->min - 1)
+			if (root->currsize == size)
 			{
 				BTreeNode* s = new BTreeNode(size);
-				s->isLeaf = false; 
+				s->isLeaf = false;
 				s->child[0] = root;
 
 				s->splitChild(0, root);
@@ -338,13 +340,15 @@ public:
 
 				int i = 0;
 				if (s->keys[0] < k)
+				{
 					i++;
-				s->child[i]->Not_full(k,directory);
+				}
+				s->child[i]->Not_full(k, directory);
 				root = s;
 			}
 			else
 			{
-				root->Not_full(k,directory);
+				root->Not_full(k, directory);
 			}
 		}
 	}
@@ -368,10 +372,11 @@ public:
 		}
 		return;
 	}
+	
 
 };
 
-void printBTree(BTreeNode* node, int level = 0) {
+void printBTree(BTreeNode* node, int& level) {
 	if (node != nullptr) {
 		cout << "Level " << level << ": ";
 		for (int i = 0; i < node->currsize; ++i) {
@@ -386,11 +391,13 @@ void printBTree(BTreeNode* node, int level = 0) {
 			}
 		}
 	}
-}
 
+	
+}
 void printBTree(BTree* btree) {
+	int lvl = 0;
 	if (btree != nullptr && btree->root != nullptr) {
-		printBTree(btree->root);
+		printBTree(btree->root,lvl);
 	}
 	else {
 		cout << "The B-tree is empty." << endl;
