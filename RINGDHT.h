@@ -22,7 +22,7 @@ struct value {
 class Node2 {
 public:
 	int key2;
-	Node2 *Next;
+	Node2* Next;
 	Node2* Prev;
 
 	Node2(int x) {
@@ -45,19 +45,23 @@ public:
 	Node* next;
 	Node* prev;
 
+	int machine_num;
+
 	Node() {
 		isMachine = false;
 		key = 0; value.content = '0';
 		value.directory = '0';
+		machine_num=0;
 	}
 
 	Node(int k, string val, bool flag) {   //just in case needed
 
 		isMachine = flag;
 		key = k; value.content = val;
+		machine_num = 0;
 	}
 
-	Node2 * TableHead;		// Linked List
+	Node2* TableHead;		// Linked List
 };
 
 class RingDHT {
@@ -65,6 +69,7 @@ public:
 	int identifier_space;
 	int NumberOfMachines;
 	Node* head;
+	Node** Machines;
 
 	RingDHT() { //is == identifier space (default 16)
 		string choice;
@@ -99,7 +104,9 @@ public:
 		else
 			NumberOfMachines = identifier_space + 1; // default number
 
-		createDHT(identifier_space, NumberOfMachines);
+		Machines = new Node*[NumberOfMachines];
+
+			createDHT(identifier_space, NumberOfMachines);
 
 	}
 
@@ -128,6 +135,7 @@ public:
 	Node* FindTableElements(Node* curr);
 
 	void PrintTable(Node* n1);
+	void PrintParticularTable();
 
 };
 void RingDHT::createDHT(int idspace, int machines) {
@@ -156,8 +164,10 @@ void RingDHT::createDHT(int idspace, int machines) {
 	else
 		manualAssignMachines();
 
+	CreateTable();
 
 	showNodes();
+
 
 	cout << "Ring DHT Setup Successful, Proceeding..." << endl;
 	this_thread::sleep_for(chrono::seconds(2));
@@ -180,7 +190,7 @@ void RingDHT::showNodes() {
 		}
 		curr = curr->next; count++;
 	} while (curr != head);
-	
+
 	cout << "--------------------------------" << endl;
 }
 
@@ -203,7 +213,9 @@ void RingDHT::randomizeMachines() {
 			i++;
 		}
 		current->value.content = getRandomName();
+		current->machine_num = machines_installed + 1;
 		current->isMachine = true;
+		Machines[machines_installed] = current;
 		Node* curr = head; int count = 0;
 		while (curr != current) {
 			count++;
@@ -221,6 +233,7 @@ void RingDHT::randomizeMachines() {
 void RingDHT::manualAssignMachines() {
 	int total = pow(2, identifier_space);
 	bool aFlag = false;
+	int machine_num = 1;
 	cout << "\n> Assign Manual IDs . . ." << endl << endl;
 	int m = 1; int assign = 0;
 	Node* current;
@@ -242,7 +255,9 @@ void RingDHT::manualAssignMachines() {
 		} while (aFlag);
 		current->value.content = getRandomName();
 		current->key = assign;
-
+		current->machine_num = machine_num;
+		Machines[machine_num - 1] = current;
+		machine_num++;
 		current->isMachine = true;
 		m++;
 	}
@@ -425,15 +440,15 @@ void RingDHT::removeFile() {
 
 void RingDHT::PrintTable(Node* curr) {
 	Node2* d2 = curr->TableHead;
-	cout << "Routing Table for Machine " << curr->key << endl;
+	cout << "Routing Table for Machine " << curr->key<<" "<<curr->machine_num << endl;
 	while (d2 != nullptr) {
 		cout << d2->key2 << "   ";
 		d2 = d2->Next;
 	}
-	cout << endl<<endl;
+	cout << endl << endl;
 }
 
-Node* RingDHT::FindTableElements(Node * curr ) {
+Node* RingDHT::FindTableElements(Node* curr) {
 	int mul = 1;
 	int total = (pow(2, identifier_space));
 	for (int i = 0; i < identifier_space; i++) {
@@ -449,7 +464,7 @@ Node* RingDHT::FindTableElements(Node * curr ) {
 
 		// Make Node
 		Node2* N1 = new Node2(curr2->key);
-			
+
 		// now insert in list
 
 		if (curr->TableHead == nullptr) {
@@ -464,22 +479,42 @@ Node* RingDHT::FindTableElements(Node * curr ) {
 			N1->Prev = d2;
 		}
 	}
-	
-	
+
+
 	return curr;
 }
 
 void RingDHT::CreateTable() {
 	Node* curr = head;
-	if(head != nullptr)
-	do
+	if (head != nullptr)
+		do
+		{
+			if (curr->isMachine) {
+				curr = FindTableElements(curr);
+			//	PrintTable(curr);
+			}
+			curr = curr->next;
+		} while (curr != head);
+}
+
+void RingDHT::PrintParticularTable()
+{
+	int machine=-1;
+	cout << "========================================================================================================================" << endl << endl;
+	while (1)
 	{
-		if (curr->isMachine) {
-			curr = FindTableElements(curr);
-			PrintTable(curr);
+		cout << "Their are currently " << NumberOfMachines << " Machines." << endl;
+		cout << "Please select which machine's routing table would you like to see" << endl;
+		cin >> machine;
+		if (machine < NumberOfMachines && machine > 0)
+		{
+			break;
 		}
-		curr = curr->next; 
-	} while (curr != head);
+		cout << endl << "Please Enter a valid machine" << endl << endl;
+	}
+
+	PrintTable(Machines[machine]);
+
 }
 
 //Left:
