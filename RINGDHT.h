@@ -19,6 +19,18 @@ struct value {
 	string content; //content in case of a machine is its name (eg, google.com)
 	string directory;
 };
+class Node2 {
+public:
+	int key2;
+	Node2 *Next;
+	Node2* Prev;
+
+	Node2(int x) {
+		key2 = x;
+		Next = nullptr;
+		Prev = nullptr;
+	}
+};
 
 class Node {
 public:
@@ -32,7 +44,6 @@ public:
 	bool isMachine;
 	Node* next;
 	Node* prev;
-	int indx;
 
 	Node() {
 		isMachine = false;
@@ -40,11 +51,13 @@ public:
 		value.directory = '0';
 	}
 
-	Node(int k, string val, bool flag) { //just in case needed
-		
+	Node(int k, string val, bool flag) {   //just in case needed
+
 		isMachine = flag;
 		key = k; value.content = val;
 	}
+
+	Node2 * TableHead;		// Linked List
 };
 
 class RingDHT {
@@ -110,22 +123,25 @@ public:
 
 	void showDirectories();
 
-};
+	void CreateTable();
 
+	Node* FindTableElements(Node* curr);
+
+	void PrintTable(Node* n1);
+
+};
 void RingDHT::createDHT(int idspace, int machines) {
 	int total = pow(2, idspace);
 	cout << "-------------------------------------" << endl;
 	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
 	cout << "Total Machines: " << machines << endl;
 	cout << "-------------------------------------" << endl;
-	Node* newNode = new Node; newNode->indx = 0; head = newNode;
+	Node* newNode = new Node; head = newNode;
 	Node* current = head;
-	int count = 0;
+	int count = 1;
 	while (count < total) {
 		Node* newNode = new Node;
-		newNode->indx = count + 1;
 		current->next = newNode;
-		newNode->prev = current;
 		current = current->next;
 		count++;
 	}
@@ -153,18 +169,18 @@ void RingDHT::showNodes() {
 	cout << "\nNodes: " << endl;
 	cout << "--------------------------------" << endl;
 	Node* curr = head; int count = 0;
-	while (curr->next != head) {
+	do
+	{
 		cout << count << " :: ";
 		if (curr->isMachine) {
-			cout << "Machine" <<" >> "<<curr->value.content<< endl;
+			cout << "Machine" << " >> " << curr->value.content << endl;
 		}
 		else {
 			cout << "Data" << endl; //will later show status too (if the node is empty or nah)
 		}
-
-
 		curr = curr->next; count++;
-	}
+	} while (curr != head);
+	
 	cout << "--------------------------------" << endl;
 }
 
@@ -177,7 +193,7 @@ void RingDHT::randomizeMachines() {
 	Node* current = nullptr;
 	int machines_installed = 0;
 
-	while (i < total){
+	while (i < total) {
 		int j = i + m;
 		while (i < j) {
 			if (current)
@@ -195,8 +211,9 @@ void RingDHT::randomizeMachines() {
 		}
 		current->key = count;
 		machines_installed++;
-		if (machines_installed == NumberOfMachines){
-			break;}
+		if (machines_installed == NumberOfMachines) {
+			break;
+		}
 	}
 	cout << "Proceeding..." << endl;
 }
@@ -209,7 +226,7 @@ void RingDHT::manualAssignMachines() {
 	Node* current;
 	while (m <= NumberOfMachines) {
 		do {
-		aFlag = false;
+			aFlag = false;
 			cout << "Machine_" << m << " :: Assign ID: ";
 			cin >> assign;
 			current = head; int i = 0;
@@ -225,7 +242,7 @@ void RingDHT::manualAssignMachines() {
 		} while (aFlag);
 		current->value.content = getRandomName();
 		current->key = assign;
-		
+
 		current->isMachine = true;
 		m++;
 	}
@@ -285,24 +302,20 @@ void RingDHT::insertFile() {
 	fileKey = fileKey % total;
 
 	cout << "> Storing on Node_" << fileKey << endl;
-	// for now i'm using basic way, instead of routing
+
 	Node* current = head; int indx = 0;
 	while ((indx++) < fileKey)
 		current = current->next;
-	if (current->isMachine) {
-		current->btree.insert(fileKey, path);
-	}
-	else {
-		current->key = fileKey;
-		current->value.content = fileContent;
-		current->value.directory = path;
-	}
+
+	current->key = fileKey;
+	current->value.content = fileContent;
+	current->value.directory = path;
 
 	while (!current->isMachine) {
 		current = current->next;
 	}
 	cout << "> Managed by Machine_\"" << current->value.content << "\"" << endl;
-	current->btree.insert(fileKey,path);
+	current->btree.insert(fileKey, path); //store value where <?>
 	cout << "------------------------------------------------------------------" << endl;
 	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
 	cout << "--------------------------------------------------------------------" << endl;
@@ -354,13 +367,13 @@ void RingDHT::insertMachine() {
 	return;
 }
 
-void RingDHT:: deleteMachine() {
+void RingDHT::deleteMachine() {
 	cout << "> Enter Machine Key: " << endl;
 	int key;
 	cin >> key;
 	bool found = false;
 	// machine becomes actual node<?>
-	Node* current=head;
+	Node* current = head;
 	while (current->next != head) {
 		current = current->next;
 		if (current->key == key) {
@@ -402,49 +415,77 @@ void RingDHT::showDirectories() {
 }
 
 void RingDHT::removeFile() {
-	//for a starter, we'll be randomizing the current machine from which user is searching
-	Node* currentMachine = head;;
-	int randMachine = rand() % NumberOfMachines;
-	int i = 0;
-	while (i < randMachine) {
-		currentMachine = currentMachine->next;
-		if (currentMachine->isMachine)
-			i++;
-	}
-	int key;
-	cout << "> Current Machine Node: " << randMachine;
-	cout << "> Enter the Key of The File to remove: " << endl;
-	cin >> key;
-	//there may be a possibility that the key doesn't exist (in that case direct to the start)
-
-	int choice;
-	cout << "> Enter the Key of the file to be removed" << endl;
+	string choice;
+	cout << "> Enter the content of the file to be deleted: " << endl;
 	cin >> choice;
-
-	//case 1 - current machine contains the key i.e key<=machine_key
-	Node* prevMachine = currentMachine->prev;
-	while (!prevMachine->isMachine) {
-		prevMachine = prevMachine->prev;
-	}
-	int prevKey = prevMachine->indx;
-	//i've not tested this yet (will do later)
-	if (key <= currentMachine->indx && key > prevMachine->indx) {
-		currentMachine->btree.remove(key);
-	}
-	//all other case need routing table
+	//to be deleted using the content? name? directory?
 
 }
 
 
+void RingDHT::PrintTable(Node* curr) {
+	Node2* d2 = curr->TableHead;
+	cout << "Routing Table for Machine " << curr->key << endl;
+	while (d2 != nullptr) {
+		cout << d2->key2 << "   ";
+		d2 = d2->Next;
+	}
+	cout << endl<<endl;
+}
 
+Node* RingDHT::FindTableElements(Node * curr ) {
+	int mul = 1;
+	int total = (pow(2, identifier_space));
+	for (int i = 0; i < identifier_space; i++) {
+		int index = (pow(2, i));
+		Node* curr2 = curr;
+		while (index > 0) {
+			curr2 = curr2->next;
+			index--;
+		}
+		while (curr2->isMachine == false) {
+			curr2 = curr2->next;
+		}
 
+		// Make Node
+		Node2* N1 = new Node2(curr2->key);
+			
+		// now insert in list
 
+		if (curr->TableHead == nullptr) {
+			curr->TableHead = N1;
+		}
+		else {
+			Node2* d2 = curr->TableHead;
+			while (d2->Next != nullptr) {
+				d2 = d2->Next;
+			}
+			d2->Next = N1;
+			N1->Prev = d2;
+		}
+	}
+	
+	
+	return curr;
+}
+
+void RingDHT::CreateTable() {
+	Node* curr = head;
+	if(head != nullptr)
+	do
+	{
+		if (curr->isMachine) {
+			curr = FindTableElements(curr);
+			PrintTable(curr);
+		}
+		curr = curr->next; 
+	} while (curr != head);
+}
 
 //Left:
 /*
--> Btree testing
--> routing table
--> insertion is completed thru normal way (traverse every node one by one), will do with routing table later
--> same case with deletion
--> searching 
+-> BTree Insertion & Deletion (Implementation is Done, but inserting actual keys/directories left)
+-> Routing tables
+-> Searching (will be possible after routing tables are implemented)
+-> some functions i made are incomplete, will complete em too
 */
