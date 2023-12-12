@@ -22,7 +22,7 @@ void startScreen() {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
 }
-void MainMenu(RingDHT *DHT) {
+void MainMenu(RingDHT* DHT) {
 	//just a demo (option 1,4,6 work for now)
 	//some options are just for us (to see the current status) (options 6 & 7) ;; will remove later if needed
 	while (1) {
@@ -50,13 +50,15 @@ void MainMenu(RingDHT *DHT) {
 			break;
 		case 2: DHT->removeFile();
 			break;
-		case 4: 
+		case 3: DHT->CreateTable();
+			break;
+		case 4:
 			DHT->insertMachine();
 			break;
 		case 5:
 			DHT->removeFile();
 			break;
-		case 6: 
+		case 6:
 			DHT->showNodes();
 			break;
 		case 7:
