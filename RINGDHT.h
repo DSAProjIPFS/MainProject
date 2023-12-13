@@ -33,7 +33,7 @@ struct value {
 
 class Node {
 public:
-	int key; //hash value
+	long long int key; //hash value
 	value value; //actual content of whatever txt file
 	/*
 	Machine -> hashed value generated from its name i.e google.com
