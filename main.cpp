@@ -4,7 +4,11 @@
 #include "RINGDHT.h"
 using namespace std;
 
+const int MAX_BUFFER_SIZE = 32767;
+
 void startScreen() {
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
 	cout << endl << endl << endl << endl << endl;;
 	cout << "========================================================================================================================" << endl << endl;
 	cout << "                                         ###  #####  ######  ######" << endl;
@@ -19,8 +23,8 @@ void startScreen() {
 	cout << "                                              Press [Enter] to Proceed" << endl << endl;
 	_getch();
 	system("cls");
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+	HANDLE hhConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hhConsole, FOREGROUND_GREEN);
 }
 void MainMenu(RingDHT* DHT) {
 	//just a demo (option 1,4,6 work for now)
@@ -28,6 +32,8 @@ void MainMenu(RingDHT* DHT) {
 	while (1) {
 		int choice = 0;
 		do {
+			cin.clear(); 
+			cin.ignore(MAX_BUFFER_SIZE, '\n'); 
 			cout << "\n=============================================" << endl;
 			cout << "> Options" << endl;
 			cout << "1. Insert File" << endl;
@@ -37,11 +43,12 @@ void MainMenu(RingDHT* DHT) {
 			cout << "5. Remove a Machine" << endl;
 			cout << "6. Print DHT" << endl;
 			cout << "7. Show Paths of Inserted Data" << endl;
+			cout << "8. Print B-Tree of a Machine" << endl;
 			cout << "0. Exit" << endl;
 			cout << "=============================================" << endl << "> ";
 			cin >> choice;
 			system("cls");
-		} while (choice > 7 && choice != 0);
+		} while (choice > 8 && choice != 0);
 
 		switch (choice) {
 		case 0: cout << "Exiting . . ." << endl; return;
@@ -67,6 +74,9 @@ void MainMenu(RingDHT* DHT) {
 		case 7:
 			DHT->showDirectories(); //meh, i just created this for myself, will remove later
 			break;
+		case 8:
+			DHT->printMachineBtree();
+			break;
 		}
 
 
@@ -77,10 +87,12 @@ void MainMenu(RingDHT* DHT) {
 
 
 int main() {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+	
 	startScreen();
 	RingDHT DHT;
 	MainMenu(&DHT);
+	return 0;
+
+	
 
 }
