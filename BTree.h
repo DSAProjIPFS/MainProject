@@ -3,10 +3,19 @@
 #include <queue>
 using namespace std;
 
+
+struct Directory {
+	string path;
+	Directory* next;
+	Directory() {
+		next = NULL;
+	}
+};
+
 class BTreeNode {
 public:
 	int* keys; //N size
-	string* paths;
+	Directory* paths;
 	int size; //varies
 	int currsize;
 	int min;
@@ -19,7 +28,7 @@ public:
 		size = 4; // Default (?)
 		min = (size + 1) / 2;
 		keys = new int[size - 1];
-		paths = new string[size]; // Adjusted to size
+		paths = new Directory[size]; // Adjusted to size
 		child = new BTreeNode * [size];
 		parent = nullptr;
 		isLeaf = true;
@@ -30,10 +39,29 @@ public:
 		size = n;
 		min = (size + 1) / 2;
 		keys = new int[size - 1] {0};
-		paths = new string[size]; // Adjusted to size
+		paths = new Directory[size]; // Adjusted to size
 		child = new BTreeNode * [size];
 		currsize = 0;
 	}
+
+	void traverse()
+	{
+		int i;
+		for (i = 0; i < currsize; i++)
+		{
+			// If this is not leaf, then before printing key[i],
+			// traverse the subtree rooted with child C[i].
+			if (isLeaf == false)
+				child[i]->traverse();
+			cout << " " << keys[i];
+		}
+
+		// Print the subtree rooted with last child
+		if (isLeaf == false) {
+			child[i]->traverse();
+		}
+	}
+
 	void Not_full(int k, string p) {
 		int i = currsize - 1;
 
@@ -45,7 +73,7 @@ public:
 			}
 
 			keys[i + 1] = k;
-			paths[i + 1] = p;
+			paths[i + 1].path = p;
 			currsize = currsize + 1;
 		}
 		else {
@@ -140,14 +168,14 @@ public:
 					int pred = getPredecessor(indx);
 					string predpath = getPredecessorPath(indx);
 					keys[indx] = pred;
-					paths[indx] = predpath;
+					paths[indx].path = predpath;
 
 					child[indx]->removeKey(pred);
 				}
 				else if (child[indx + 1]->currsize >= min) { //case 2, k succeeds
 					int succ = getSuccessor(indx);
 					string succpath = getSuccessorPath(indx);
-					paths[indx] = succpath;
+					paths[indx].path = succpath;
 					keys[indx] = succ;
 					child[indx + 1]->removeKey(succ);
 				}
@@ -229,7 +257,7 @@ public:
 		while (!curr->isLeaf) {
 			curr = curr->child[curr->currsize];
 		}
-		return curr->paths[curr->currsize - 1];
+		return curr->paths[curr->currsize - 1].path;
 	}
 
 	int getSuccessor(int indx) {
@@ -247,7 +275,7 @@ public:
 			cout << "p" << endl;
 			curr = curr->child[0];
 		}
-		return curr->paths[0];
+		return curr->paths[0].path;
 	}
 
 	void fillNode(int indx) {
@@ -328,7 +356,7 @@ public:
 		{
 			root = new BTreeNode(size);
 			root->isLeaf = true;
-			root->paths[0] = directory;
+			root->paths[0].path = directory;
 			root->keys[0] = k;
 			root->currsize = 1;
 		}
@@ -382,38 +410,68 @@ public:
 		return;
 	}
 
+	void getValuesLess(int rangeDigit, stack<long long int>& values, stack<string>& paths) {
+		if (root != nullptr) {
+			getValuesLess(root, rangeDigit, values, paths);
+		}
+	}
+
+	void getValuesLess(BTreeNode* node, int rangeDigit, stack<long long int>& values, stack<string>& paths) {
+		if (node != NULL) {
+			int i = 0;
+			while (i < node->currsize && node->keys[i] < rangeDigit) {
+				values.push(node->keys[i]);
+				paths.push(node->paths[i].path);
+
+				node->removeKey(node->keys[i]);
+				i++;
+			}
+
+			if (!node->isLeaf) {
+				getValuesLess(node->child[i], rangeDigit, values, paths);
+			}
+
+			getValuesLess(node->child[i + 1], rangeDigit, values, paths);
+		}
+	}
+
+	void traverse()
+	{
+		if (root != NULL) root->traverse();
+	}
 
 };
 
-void printBTree(BTreeNode* node, int& level) {
+void printTree(BTreeNode* node, int level) {
 	if (node != nullptr) {
-		cout << "Level " << level << ": ";
+		cout << std::string(level * 4, ' ');
+
+		// Print keys
 		for (int i = 0; i < node->currsize; ++i) {
 			cout << node->keys[i] << " ";
 		}
 		cout << endl;
 
-		++level;
+		// Print child subtrees
 		if (!node->isLeaf) {
 			for (int i = 0; i <= node->currsize; ++i) {
-				printBTree(node->child[i], level);
+				printTree(node->child[i], level + 1);
+				if (i < node->currsize)
+					cout << std::string((level + 1) * 4, ' ') << "| ";
 			}
 		}
 	}
-
-
 }
 
 void printBTree(BTree* btree) {
 	int lvl = 0;
 	if (btree != nullptr && btree->root != nullptr) {
-		printBTree(btree->root, lvl);
+		printTree(btree->root, lvl);
 	}
 	else {
 		cout << "The B-tree is empty." << endl;
 	}
 }
-
 bool SearchHelper(BTreeNode* node, int key) {
 	if (node != nullptr) {
 		for (int i = 0; i < node->currsize; ++i) {
