@@ -401,7 +401,7 @@ public:
 		if (root->currsize == 0) {
 			BTreeNode* root_cpy = root;
 			if (!root->isLeaf)
-				root = root->child[0]; //make the first child root(can be null)
+				root = root->child[0]; 
 			else
 				root = NULL;
 
@@ -417,21 +417,29 @@ public:
 	}
 
 	void getValuesLess(BTreeNode* node, int rangeDigit, stack<long long int>& values, stack<string>& paths) {
-		if (node != NULL) {
-			int i = 0;
-			while (i < node->currsize && node->keys[i] < rangeDigit) {
-				values.push(node->keys[i]);
-				paths.push(node->paths[i].path);
+		if (node != nullptr) {
+			int i;
+			for (i = 0; i < node->currsize; i++) {
+				if (!node->isLeaf) {
+					getValuesLess(node->child[i], rangeDigit, values, paths);
+				}
+				if (node->keys[i] < rangeDigit) {
+					values.push(node->keys[i]);
+					paths.push(node->paths[i].path);
+					
+				}
+				else {
+					break; 
+				}
+			}
 
-				node->removeKey(node->keys[i]);
-				i++;
+			for (int j = 0; j < i; ++j) {
+				node->removeKey(node->keys[j]);
 			}
 
 			if (!node->isLeaf) {
 				getValuesLess(node->child[i], rangeDigit, values, paths);
 			}
-
-			getValuesLess(node->child[i + 1], rangeDigit, values, paths);
 		}
 	}
 
@@ -442,17 +450,20 @@ public:
 
 };
 
+void rootCheck(BTree* &b) {
+	if (b->root->currsize == 0)
+		b->root = NULL;
+}
+
 void printTree(BTreeNode* node, int level) {
 	if (node != nullptr) {
 		cout << std::string(level * 4, ' ');
 
-		// Print keys
 		for (int i = 0; i < node->currsize; ++i) {
 			cout << node->keys[i] << " ";
 		}
 		cout << endl;
 
-		// Print child subtrees
 		if (!node->isLeaf) {
 			for (int i = 0; i <= node->currsize; ++i) {
 				printTree(node->child[i], level + 1);
