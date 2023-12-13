@@ -46,23 +46,26 @@ void MainMenu(RingDHT* DHT) {
 		switch (choice) {
 		case 0: cout << "Exiting . . ." << endl; return;
 			break;
-		case 1: DHT->insertFile();
+		case 1: 
+			DHT->insertFile(); //fully working
 			break;
-		case 2: DHT->removeFile();
+		case 2: 
+			DHT->removeFile(); //fully working
 			break;
-		case 3: DHT->PrintOnlyOne();
+		case 3: 
+			DHT->PrintOnlyOne(); //fully working
 			break;
 		case 4:
 			DHT->insertMachine();
 			break;
 		case 5:
-			DHT->removeFile();
+			DHT->removeFile(); //fully working
 			break;
 		case 6:
-			DHT->showNodes();
+			DHT->showNodes(); //fully working
 			break;
 		case 7:
-			DHT->showDirectories();
+			DHT->showDirectories(); //meh, i just created this for myself, will remove later
 			break;
 		}
 
