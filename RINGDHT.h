@@ -9,7 +9,6 @@
 #include <fstream>
 #include <stack>
 #include <string>
-#include <string>
 
 #include "BTree.h"
 #include "Hashing.h"
@@ -258,6 +257,7 @@ void RingDHT::manualAssignMachines() {
 	system("cls");
 }
 
+//File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
 void RingDHT::insertFile() {
 	int machineKey = 0;
 	cout << "> Enter the Machine (Key) to insert the File from." << endl;
@@ -319,24 +319,21 @@ void RingDHT::insertFile() {
 
 	cout << "> Storing on Node_" << fileKey << endl;
 	//use of routing to table to get at the designated node
-	Node* current = SearchingFromTable(machineKey, fileKey);
-	cout << current->indx << endl;
-	current->key = fileKey;
-	current->value.content = fileContent;
-	current->value.directory = path;
-
-	while (!current->isMachine) {
-		current = current->next;
+	cout << "------------------------------" << endl;
+	Node* currenttMachine = SearchingFromTable(machineKey, fileKey);
+	if (!currenttMachine) {
+		return;
 	}
-	cout << "> Managed by Machine_\"" << current->value.content << "\"" << endl;
-	current->btree.insert(fileKey, path); //store value where <?>
+	cout << "------------------------------" << endl;
+	cout << "> Managed by Machine_\"" << currenttMachine->value.content << "\"" <<" [Key: "<<currenttMachine->indx<<"]"<< endl;
+	currenttMachine->btree.insert(fileKey, path); //store value where <?>
 	cout << "------------------------------------------------------------------" << endl;
 	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
 	cout << "--------------------------------------------------------------------" << endl;
+	/*cout << "BTree:" << endl;
+	currenttMachine->btree.traverse();
+	cout << endl << endl;*/ //uncomment this to see the working of the btree (inserted in)
 	PressEnterToProceed();
-
-	//done after that
-
 }
 
 
@@ -492,6 +489,7 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 				}
 			}
 		}
+					cout << ">>> Machine_" << Start->indx << endl;
 	} while ((Start->key < find));
 	//cout << Start->key << ;
 	return Start;
@@ -510,6 +508,7 @@ Node* RingDHT::SearchingFromTable(int start, int find) {
 		cout << "Starting Key is not a Machine\n";
 		return nullptr;
 	}
+	cout << "Routing: " << endl;
 	return (Recurrsion(Start, find));
 }
 
