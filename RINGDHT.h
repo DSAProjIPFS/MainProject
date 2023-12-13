@@ -135,6 +135,9 @@ public:
 
 	void PrintOnlyOne();
 
+	void printMachineBtree();
+
+	
 };
 void RingDHT::createDHT(int idspace, int machines) {
 	int total = pow(2, idspace);
@@ -264,13 +267,20 @@ void RingDHT::manualAssignMachines() {
 
 //File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
 void RingDHT::insertFile() {
-	int machineKey = 0;
-	cout << "> Enter the Machine (Key) to insert the File from." << endl;
-	cin >> machineKey;
-	Node* currentMachine = head; int ii = 0;
-	while (ii < machineKey) {
-		currentMachine = currentMachine->next;  ii++;
-	}
+	int machineKey = 0; bool flagg = false;
+	do {
+		flagg = false;
+		cout << "> Enter the Machine (Key) to insert the File from." << endl;
+		cin >> machineKey;
+		Node* currentMachine = head; int ii = 0;
+		while (ii < machineKey) {
+			currentMachine = currentMachine->next;  ii++;
+		}
+		if (!currentMachine->isMachine) {
+			cout << "> The key you entered is not affiliated with any Machine. Try again." << endl;
+			flagg = true;
+		}
+	} while (flagg);
 	string path; bool flag = 1;
 	cout << "Inserting File..." << endl;
 	ifstream file;
@@ -351,16 +361,34 @@ string RingDHT::getRandomName() {
 }
 
 void RingDHT::insertMachine() {
+	cout << "> Inserting Machine. . ." << endl;
+	cout << "--------------------------------" << endl;
+	int ch;
+	cout << "1. Insert through Name" << endl << "2. Insert through Key" << endl;
+	cin >> ch;
 	string key;
-	cout << "\n> Enter Machine Name: ";
-	cin >> key;
-	int total = pow(2, identifier_space);
-	if ((NumberOfMachines + 1) > pow(2, identifier_space)) {
-		cout << "> Cannot insert, Maximum Number reached" << endl;
-		return;
+	long long int hash = 0;
+	if (ch == 1) {
+		cout << "\n> Enter Machine Name: ";
+		cin.ignore(1);
+		getline(cin, key);
+		int total = pow(2, identifier_space);
+		if ((NumberOfMachines + 1) > total) {
+			cout << "> Cannot insert, Maximum Number reached" << endl;
+			return;
+		}
+		hash = abs(getHash(key));
+
+		hash = hash % total;
+
+		cout << "((" << hash << "))" << endl;
 	}
-	long long int hash = getHash(key);
-	hash = hash & total;
+	else {
+		long long int keyy;
+		cout << "\n> Enter Key: ";
+		cin >> keyy;
+		hash = keyy;
+	}
 	int i = 0; Node* current = head;
 	while (i < hash) {
 		current = current->next;
@@ -371,10 +399,31 @@ void RingDHT::insertMachine() {
 		cout << "> Cannot insert, Machine already exists" << endl;
 		return;
 	}
+	Node* nextMachine = current->next;
+	Node* prevMachine = current->prev;
+
+	while (!nextMachine->isMachine)
+		nextMachine = nextMachine->next;
+
+	/*while (!prevMachine->isMachine)
+		prevMachine = prevMachine->prev;*/
+
+
+
 	current->isMachine = true;
 	current->key = hash;
 	current->value.content = key;
 
+	CreateTable(); //update routing tables of machines
+	stack<long long int> vals;
+	stack<string> paths;
+	nextMachine->btree.getValuesLess(hash, vals, paths);
+	if (nextMachine->btree.root->currsize == 0)
+		nextMachine->btree.root = NULL;
+	while (!vals.empty()) {
+		current->btree.insert(vals.top(),paths.top());
+		vals.pop(); paths.pop();
+	}
 	cout << "> Machine\"" << key << "\" inserted Successfully" << endl;
 	cout << "Proceeding . . ." << endl << endl;
 	return;
@@ -448,7 +497,7 @@ void RingDHT::removeFile() {
 		prevMachine = prevMachine->prev;
 	}
 	int prevKey = prevMachine->indx;
-	//i've not tested this yet (will do later)
+	
 	if (key <= currentMachine->indx && key > prevMachine->indx) {
 		cout << "> Present in current Machine. . ." << endl;
 		currentMachine->btree.remove(key);
@@ -497,7 +546,7 @@ void RingDHT::CreateTable() {
 		{
 			if (curr->isMachine) {
 				curr = FindTableElements(curr);
-				//PrintTable(curr);
+				PrintTable(curr);
 			}
 			curr = curr->next;
 		} while (curr != head);
@@ -537,7 +586,7 @@ Node* RingDHT::SearchingFromTable(int start, int find) {
 	}
 
 	if (Start->isMachine == false) {
-		cout << "Starting Key is not a Machine\n";
+		cout << "> Starting Key is not a Machine\n";
 		return nullptr;
 	}
 	cout << "Routing: " << endl;
@@ -564,10 +613,30 @@ void RingDHT::PrintOnlyOne() {
 	return;
 }
 
+void RingDHT::printMachineBtree() {
+	long long int key; bool flag = false; Node* current;
+	do {
+		flag = false;
+		cout << "> Enter the Key of The Machine" << endl;
+		cin >> key;
+		current = head; long long int i = 0;
+		while (i < key) {
+			current = current->next;
+			i++;
+		}
+		if (!current->isMachine) {
+			cout << "> The Machine for this key does not exist. Try again." << endl;
+			flag = true;
+		}
+	} while (flag);
+	printBTree(&current->btree);
+
+	return;
+}
 //Left:
 /*
--> Btree Deletion (main) 
--> Inserting a machine; data store on the next machine (with key lower than the new inserted one) to be stored on the new machine
--> same scenario with deletion, the deleted machine will have all data transfered to the one next to it
--> linked list in the string of btree paths
+-> Btree Testing
+-> Removing a machine (All files to be transfered to the next machine) I'll do this tommorow
+-> More Beautification
+-> use of linked list (I created Directory struct in Btree), in case if a file with same key arrives on the same btree (duplicate/same content)
 */
