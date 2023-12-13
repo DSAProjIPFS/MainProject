@@ -15,6 +15,16 @@
 #include "Hashing.h"
 using namespace std;
 
+//utility functions
+void PressEnterToProceed() {
+	cout << "Press any key to Proceed..." << endl;
+	_getch();
+}
+
+void sleepFor(int seconds) {
+	this_thread::sleep_for(chrono::seconds(seconds));
+}
+
 struct value {
 	string content; //content in case of a machine is its name (eg, google.com)
 	string directory;
@@ -28,6 +38,7 @@ public:
 	Machine -> hashed value generated from its name i.e google.com
 	Data -> hashed value generated from its content i.e txt file content
 	*/
+	int indx;
 	BTree btree;
 	bool isMachine;
 	Node* next;
@@ -37,6 +48,7 @@ public:
 		isMachine = false;
 		key = 0; value.content = '0';
 		value.directory = '0';
+		indx = 0;
 	}
 
 	Node(int k, string val, bool flag) {   //just in case needed
@@ -129,11 +141,12 @@ void RingDHT::createDHT(int idspace, int machines) {
 	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
 	cout << "Total Machines: " << machines << endl;
 	cout << "-------------------------------------" << endl;
-	Node* newNode = new Node; head = newNode;
+	Node* newNode = new Node; newNode->indx = 0; head = newNode;
 	Node* current = head;
 	int count = 1;
 	while (count < total) {
 		Node* newNode = new Node;
+		newNode->indx = count;
 		current->next = newNode;
 		current = current->next;
 		count++;
@@ -149,7 +162,7 @@ void RingDHT::createDHT(int idspace, int machines) {
 	else
 		manualAssignMachines();
 
-
+	CreateTable();
 	showNodes();
 
 	cout << "Ring DHT Setup Successful, Proceeding..." << endl;
@@ -159,6 +172,7 @@ void RingDHT::createDHT(int idspace, int machines) {
 }
 
 void RingDHT::showNodes() {
+	system("cls");
 	cout << "\nNodes: " << endl;
 	cout << "--------------------------------" << endl;
 	Node* curr = head; int count = 0;
@@ -173,7 +187,7 @@ void RingDHT::showNodes() {
 		}
 		curr = curr->next; count++;
 	} while (curr != head);
-	
+
 	cout << "--------------------------------" << endl;
 }
 
@@ -195,8 +209,10 @@ void RingDHT::randomizeMachines() {
 				current = head;
 			i++;
 		}
-		current->value.content = getRandomName();
-		current->isMachine = true;
+		if (current) {
+			current->value.content = getRandomName();
+			current->isMachine = true;
+		}
 		Node* curr = head; int count = 0;
 		while (curr != current) {
 			count++;
@@ -243,6 +259,13 @@ void RingDHT::manualAssignMachines() {
 }
 
 void RingDHT::insertFile() {
+	int machineKey = 0;
+	cout << "> Enter the Machine (Key) to insert the File from." << endl;
+	cin >> machineKey;
+	Node* currentMachine = head; int ii = 0;
+	while (ii < machineKey) {
+		currentMachine = currentMachine->next;  ii++;
+	}
 	string path; bool flag = 1;
 	cout << "Inserting File..." << endl;
 	ifstream file;
@@ -295,11 +318,9 @@ void RingDHT::insertFile() {
 	fileKey = fileKey % total;
 
 	cout << "> Storing on Node_" << fileKey << endl;
-
-	Node* current = head; int indx = 0;
-	while ((indx++) < fileKey)
-		current = current->next;
-
+	//use of routing to table to get at the designated node
+	Node* current = SearchingFromTable(machineKey, fileKey);
+	cout << current->indx << endl;
 	current->key = fileKey;
 	current->value.content = fileContent;
 	current->value.directory = path;
@@ -312,12 +333,13 @@ void RingDHT::insertFile() {
 	cout << "------------------------------------------------------------------" << endl;
 	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
 	cout << "--------------------------------------------------------------------" << endl;
-	cout << "Press any key to Proceed..." << endl;
-	_getch();
+	PressEnterToProceed();
 
 	//done after that
 
 }
+
+
 
 string RingDHT::getRandomName() {
 	string list[20] = { "hub","tech","code","MCL (Maria Cooperation Limited)", "Zirwah K Organization", "One Piece", "FTN", "Lava Swimmer", "Pastry", "Mario", "DataStr", "TechComp", "AOT", "TR", "SanjiLimited", "Yowaimo", "Vinland", "FASTNUCES", "ClockServices", "WebNovel" };
@@ -346,10 +368,6 @@ void RingDHT::insertMachine() {
 	if (current->isMachine) {
 		cout << "> Cannot insert, Machine already exists" << endl;
 		return;
-	}
-
-	if (current->key) {
-		//INSERT IN BTREE IF DATA IS STORED ALREADY
 	}
 	current->isMachine = true;
 	current->key = hash;
@@ -421,13 +439,13 @@ void RingDHT::PrintTable(Node* curr) {
 	for (int i = 0; i < identifier_space; i++) {
 		cout << curr->TableArr[i]->key << "   ";
 	}
-	cout << endl<<endl;
+	cout << endl << endl;
 }
 
-Node* RingDHT::FindTableElements(Node * curr ) {
+Node* RingDHT::FindTableElements(Node* curr) {
 	int mul = 1;
 	int total = (pow(2, identifier_space));
-	curr->TableArr = new Node*[identifier_space];
+	curr->TableArr = new Node * [identifier_space];
 	for (int i = 0; i < identifier_space; i++) {
 		int index = (pow(2, i));
 		Node* curr2 = curr;
@@ -445,19 +463,19 @@ Node* RingDHT::FindTableElements(Node * curr ) {
 
 void RingDHT::CreateTable() {
 	Node* curr = head;
-	if(head != nullptr)
-	do
-	{
-		if (curr->isMachine) {
-			curr = FindTableElements(curr);
-			//PrintTable(curr);
-		}
-		curr = curr->next; 
-	} while (curr != head);
-	return;
+	if (head != nullptr)
+		do
+		{
+			if (curr->isMachine) {
+				curr = FindTableElements(curr);
+				//PrintTable(curr);
+			}
+			curr = curr->next;
+		} while (curr != head);
+		return;
 }
 
-Node* RingDHT::Recurrsion(Node* Start, int find ) {
+Node* RingDHT::Recurrsion(Node* Start, int find) {
 	do {
 		if (Start->key < find && find < Start->TableArr[0]->key) {
 			Start = Start->TableArr[0];
@@ -481,7 +499,7 @@ Node* RingDHT::Recurrsion(Node* Start, int find ) {
 }
 
 // This is the main function
-Node* RingDHT::SearchingFromTable(int start,int find) {
+Node* RingDHT::SearchingFromTable(int start, int find) {
 
 	Node* Start = head;
 	for (int i = 0; i < start; i++) {
@@ -496,23 +514,28 @@ Node* RingDHT::SearchingFromTable(int start,int find) {
 }
 
 void RingDHT::PrintOnlyOne() {
-	CreateTable();
-	cout << "\n> For Which key You Want to Print Routing Table:  ";
-	int x;
-	cin >> x;
-	cout << endl;
+	bool flag = false;
 	Node* Start = head;
-	for (int i = 0; i < x; i++) {
-		Start = Start->next;
-	}
+	do {
+		flag = false;
+		cout << "\n> Enter the key of the Machine [Routing Table Print] " << endl;;
+		int x;
+		cin >> x;
+		for (int i = 0; i < x; i++) {
+			Start = Start->next;
+		}
+		if (!Start->isMachine) {
+			cout << "> The Machine for this key does not exist. Try again." << endl;
+			flag = true;
+		}
+	} while (flag);
 	PrintTable(Start);
 	return;
 }
 
 //Left:
 /*
--> BTree Insertion & Deletion (Implementation is Done, but inserting actual keys/directories left)
--> Routing tables
--> Searching (will be possible after routing tables are implemented)
--> some functions i made are incomplete, will complete em too
+-> Btree Deletion (main) 
+-> Inserting a machine; data store on the next machine (with key lower than the new inserted one) to be stored on the new machine
+-> same scenario with deletion, the deleted machine will have all data transfered to the one next to it
 */
