@@ -9,6 +9,7 @@
 #include <fstream>
 #include <stack>
 #include <string>
+#include <string>
 
 #include "BTree.h"
 #include "Hashing.h"
@@ -18,6 +19,7 @@ using namespace std;
 void PressEnterToProceed() {
 	cout << "Press any key to Proceed..." << endl;
 	_getch();
+	system("cls");
 }
 
 void sleepFor(int seconds) {
@@ -140,17 +142,20 @@ void RingDHT::createDHT(int idspace, int machines) {
 	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
 	cout << "Total Machines: " << machines << endl;
 	cout << "-------------------------------------" << endl;
-	Node* newNode = new Node; newNode->indx = 0; head = newNode;
+	Node* newNode = new Node; newNode->indx = 0;
+	head = newNode;
 	Node* current = head;
 	int count = 1;
 	while (count < total) {
-		Node* newNode = new Node;
+		newNode = new Node; // Use the existing variable
 		newNode->indx = count;
 		current->next = newNode;
+		newNode->prev = current;
 		current = current->next;
 		count++;
 	}
-	current->next = head; //circular
+	current->next = head; // Circular
+	head->prev = current;
 	total--; //starts from 0 (less one)
 	int c;
 	cout << "> Do you want to Automatically or Manually assign IDs to Machines? 1. Automatically :: 2. Manually" << endl;
@@ -423,10 +428,37 @@ void RingDHT::showDirectories() {
 }
 
 void RingDHT::removeFile() {
-	string choice;
-	cout << "> Enter the content of the file to be deleted: " << endl;
-	cin >> choice;
-	//to be deleted using the content? name? directory?
+	//for a starter, we'll be randomizing the current machine from which user is searching
+	int machineKey = 0;
+	cout << "> Enter the Machine (Key) to insert the File from." << endl;
+	cin >> machineKey;
+	Node* currentMachine = head; int ii = 0;
+	while (ii < machineKey) {
+		currentMachine = currentMachine->next;  ii++;
+	}
+	int key;
+	cout << "> Current Machine Node: " << machineKey << endl;
+	cout << "> Enter the Key of The File to remove: " << endl;
+	cin >> key;
+	//there may be a possibility that the key doesn't exist (in that case direct to the start)
+
+	//case 1 - current machine contains the key i.e key<=machine_key
+	Node* prevMachine = currentMachine->prev;
+	while (!prevMachine->isMachine) {
+		prevMachine = prevMachine->prev;
+	}
+	int prevKey = prevMachine->indx;
+	//i've not tested this yet (will do later)
+	if (key <= currentMachine->indx && key > prevMachine->indx) {
+		cout << "> Present in current Machine. . ." << endl;
+		currentMachine->btree.remove(key);
+	}
+	//routing...
+	cout << "> Not present in current Machine, Routing to the next machines. . ." << endl;
+	Node* designatedMachine = SearchingFromTable(machineKey, key);
+	designatedMachine->btree.remove(key);
+	cout << "File Removed Successfully." << endl;
+	PressEnterToProceed();
 
 }
 
@@ -537,4 +569,5 @@ void RingDHT::PrintOnlyOne() {
 -> Btree Deletion (main) 
 -> Inserting a machine; data store on the next machine (with key lower than the new inserted one) to be stored on the new machine
 -> same scenario with deletion, the deleted machine will have all data transfered to the one next to it
+-> linked list in the string of btree paths
 */
