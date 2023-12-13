@@ -1,6 +1,8 @@
-LEFT:
+📝 LEFT:
 
-- Btree Deletion (main) 
-- Inserting a machine; data store on the next machine (with key lower than the new inserted one) to be stored on the new machine
-- same scenario with deletion, the deleted machine will have all data transfered to the one next to it
+- Btree Testing
+- Removing a machine (All files to be transfered to the next machine) I'll do this tommorow
+- More Beautification
+- use of linked list (I created Directory struct in Btree), in case if a file with same key arrives on the same btree (duplicate/same content)
+
 
