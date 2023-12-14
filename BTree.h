@@ -65,18 +65,18 @@ public:
 	bool Search(int x)
 	{
 		int i;
-		bool check=false;
+		bool check = false;
 		for (i = 0; i < currsize; i++)
-		{	
+		{
 			if (keys[i] == x)
 				return true;
 			if (isLeaf == false)
 				check = child[i]->Search(x);
 
-			if(check)
+			if (check)
 				return true;
 		}
-		
+
 		if (isLeaf == false) {
 			check = child[i]->Search(x);
 			if (check)
@@ -84,6 +84,7 @@ public:
 		}
 		return check;
 	}
+
 	void Not_full(int k, string p) {
 		int i = currsize - 1;
 
@@ -93,10 +94,15 @@ public:
 				paths[i + 1] = paths[i];
 				i--;
 			}
-
-			keys[i + 1] = k;
-			paths[i + 1].path = p;
-			currsize = currsize + 1;
+			if (keys[i] == k) {
+				paths[i].next = new Directory();
+				paths[i].next->path = p;
+			}
+			else {
+				keys[i + 1] = k;
+				paths[i + 1].path = p;
+				currsize = currsize + 1;
+			}
 		}
 		else {
 			while (i >= 0 && keys[i] > k) {
@@ -144,6 +150,7 @@ public:
 			keys[j + 1] = keys[j];
 			paths[j + 1] = paths[j];
 		}
+		
 
 		keys[i] = Node->keys[min - 1];
 		paths[i] = Node->paths[min - 1];
@@ -373,7 +380,6 @@ public:
 	}
 	void insert(int k, const string& directory)
 	{
-		cout << k << endl;
 		if (root == NULL)
 		{
 			root = new BTreeNode(size);
@@ -382,7 +388,7 @@ public:
 			root->keys[0] = k;
 			root->currsize = 1;
 		}
-		else // If tree is not empty
+		else 
 		{
 
 			if (root->currsize == size)
@@ -423,7 +429,7 @@ public:
 		if (root->currsize == 0) {
 			BTreeNode* root_cpy = root;
 			if (!root->isLeaf)
-				root = root->child[0];
+				root = root->child[0]; 
 			else
 				root = NULL;
 
@@ -448,10 +454,10 @@ public:
 				if (node->keys[i] < rangeDigit) {
 					values.push(node->keys[i]);
 					paths.push(node->paths[i].path);
-
+					
 				}
 				else {
-					break;
+					break; 
 				}
 			}
 
@@ -461,6 +467,33 @@ public:
 
 			if (!node->isLeaf) {
 				getValuesLess(node->child[i], rangeDigit, values, paths);
+			}
+		}
+	}
+
+	void getAllValues(stack<long long int>& values, stack<string>& paths) {
+		if (root != nullptr) {
+			getAllValues(root, values, paths);
+		}
+	}
+
+	void getAllValues(BTreeNode* node, stack<long long int>& values, stack<string>& paths) {
+		if (node != nullptr) {
+			int i;
+			for (i = 0; i < node->currsize; i++) {
+				if (!node->isLeaf) {
+					getAllValues(node->child[i], values, paths);
+				}
+				values.push(node->keys[i]);
+				paths.push(node->paths[i].path);
+			}
+
+			if (!node->isLeaf) {
+				getAllValues(node->child[i], values, paths);
+			}
+
+			for (int j = 0; j < i; ++j) {
+				node->removeKey(node->keys[j]);
 			}
 		}
 	}
@@ -478,9 +511,12 @@ public:
 
 		return x;
 	}
+
+
+
 };
 
-void rootCheck(BTree*& b) {
+void rootCheck(BTree* &b) {
 	if (b->root->currsize == 0)
 		b->root = NULL;
 }
@@ -504,10 +540,10 @@ void printTree(BTreeNode* node, int level) {
 	}
 }
 
-void printBTree(BTree btree) {
+void printBTree(BTree* btree) {
 	int lvl = 0;
-	if ( btree.root != nullptr) {
-		printTree(btree.root, lvl);
+	if (btree != nullptr && btree->root != nullptr) {
+		printTree(btree->root, lvl);
 	}
 	else {
 		cout << "The B-tree is empty." << endl;
@@ -538,5 +574,40 @@ void SearchBTree(BTree btree, int key) {
 	}
 	else {
 		cout << "Element Not Found\n";
+	}
+}
+
+
+
+void getPathHelper(BTreeNode* node, int key, stack<string> &paths) {
+	if (node != nullptr) {
+		for (int i = 0; i < node->currsize; ++i) {
+			if (node->keys[i] == key) {
+				Directory* current = &node->paths[i];
+				do {
+					paths.push(current->path);
+					current = current->next;
+
+				} while (current);
+			}
+		}
+		bool x = false;
+		if (!node->isLeaf) {
+			for (int i = 0; i <= node->currsize; ++i) {
+				x = SearchHelper(node->child[i], key);
+				if (x == true)
+					break;
+			}
+		}
+	}
+}
+
+void getPath(BTree btree, int key, stack<string> &paths) {
+	if (SearchHelper(btree.root, key)) {
+		getPathHelper(btree.root, key, paths);
+	}
+	else {
+		cout << "> Key not found" << endl;
+		return;
 	}
 }
