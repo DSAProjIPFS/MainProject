@@ -31,9 +31,9 @@ void MainMenu(RingDHT* DHT) {
 	//some options are just for us (to see the current status) (options 6 & 7) ;; will remove later if needed
 	while (1) {
 		int choice = 0;
-		do {
-			cin.clear(); 
-			cin.ignore(MAX_BUFFER_SIZE, '\n'); 
+		do {/*
+			cin.clear();
+			cin.ignore(MAX_BUFFER_SIZE, '\n'); */
 			cout << "\n=============================================" << endl;
 			cout << "> Options" << endl;
 			cout << "1. Insert File" << endl;
@@ -42,43 +42,45 @@ void MainMenu(RingDHT* DHT) {
 			cout << "4. Add New Machine" << endl;
 			cout << "5. Remove a Machine" << endl;
 			cout << "6. Print DHT" << endl;
-			cout << "7. Show Paths of Inserted Data" << endl;
-			cout << "8. Print B-Tree of a Machine" << endl;
+			cout << "7. Print B-Tree of a Machine" << endl;
+			cout << "8. Get Path of a File" << endl;
+			cout << "9. Info" << endl;
 			cout << "0. Exit" << endl;
 			cout << "=============================================" << endl << "> ";
 			cin >> choice;
 			system("cls");
-		} while (choice > 8 && choice != 0);
+		} while (choice > 10 && choice != 0);
 
 		switch (choice) {
 		case 0: cout << "Exiting . . ." << endl; return;
 			break;
-		case 1: 
+		case 1:
 			DHT->insertFile(); //fully working
 			break;
-		case 2: 
+		case 2:
 			DHT->removeFile(); //fully working
 			break;
-		case 3: 
-			DHT->PrintOnlyOne(); //fully working
+		case 3:
+			DHT->PrintTables(); //fully working
 			break;
 		case 4:
 			DHT->insertMachine();
 			break;
 		case 5:
-			DHT->removeFile(); //fully working
+			DHT->deleteMachine(); //fully working
 			break;
 		case 6:
-			DHT->showNodes(); //fully working
-			break;
+			DHT->showNodes();
 		case 7:
-			DHT->showDirectories(); //meh, i just created this for myself, will remove later
+			DHT->printMachineBtree(); //fully wok
 			break;
 		case 8:
-			DHT->printMachineBtree();
+			DHT->getFilePath();
+			break;
+		case 9:
+			DHT->getInfo();
 			break;
 		}
-
 
 	}
 
