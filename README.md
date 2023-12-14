@@ -1,8 +1,6 @@
+!!! please this is the most recent updated commit (fully working, every function), copy and paste everything (main, btree, ringdht) to sync !!!
+
 📝 LEFT:
-
-- Btree Testing
-- Removing a machine (All files to be transfered to the next machine) I'll do this tommorow
-- More Beautification
-- use of linked list (I created Directory struct in Btree), in case if a file with same key arrives on the same btree (duplicate/same content)
-
+nothing (still check one more time if we're missing an option/operation)
+- continue testing and fixing bugs (if any)
 
