@@ -62,6 +62,28 @@ public:
 		}
 	}
 
+	bool Search(int x)
+	{
+		int i;
+		bool check=false;
+		for (i = 0; i < currsize; i++)
+		{	
+			if (keys[i] == x)
+				return true;
+			if (isLeaf == false)
+				check = child[i]->Search(x);
+
+			if(check)
+				return true;
+		}
+		
+		if (isLeaf == false) {
+			check = child[i]->Search(x);
+			if (check)
+				return true;
+		}
+		return check;
+	}
 	void Not_full(int k, string p) {
 		int i = currsize - 1;
 
@@ -401,7 +423,7 @@ public:
 		if (root->currsize == 0) {
 			BTreeNode* root_cpy = root;
 			if (!root->isLeaf)
-				root = root->child[0]; 
+				root = root->child[0];
 			else
 				root = NULL;
 
@@ -426,10 +448,10 @@ public:
 				if (node->keys[i] < rangeDigit) {
 					values.push(node->keys[i]);
 					paths.push(node->paths[i].path);
-					
+
 				}
 				else {
-					break; 
+					break;
 				}
 			}
 
@@ -448,9 +470,17 @@ public:
 		if (root != NULL) root->traverse();
 	}
 
+	bool search(int x)
+	{
+		bool y;
+		if (root != NULL)
+			y = root->Search(x);
+
+		return x;
+	}
 };
 
-void rootCheck(BTree* &b) {
+void rootCheck(BTree*& b) {
 	if (b->root->currsize == 0)
 		b->root = NULL;
 }
@@ -474,10 +504,10 @@ void printTree(BTreeNode* node, int level) {
 	}
 }
 
-void printBTree(BTree* btree) {
+void printBTree(BTree btree) {
 	int lvl = 0;
-	if (btree != nullptr && btree->root != nullptr) {
-		printTree(btree->root, lvl);
+	if ( btree.root != nullptr) {
+		printTree(btree.root, lvl);
 	}
 	else {
 		cout << "The B-tree is empty." << endl;
