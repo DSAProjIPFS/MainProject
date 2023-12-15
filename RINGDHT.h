@@ -141,6 +141,8 @@ public:
 	void printMachineBtree();
 
 	void getFilePath();
+
+	void allMachineKeys();
 	
 	void getInfo();
 };
@@ -283,6 +285,8 @@ void RingDHT::insertFile() {
 	int machineKey = 0; bool flagg = false;
 	do {
 		flagg = false;
+		allMachineKeys();
+		cout << endl;
 		cout << "> Enter the Machine (Key) to insert the File from." << endl;
 		cin >> machineKey;
 		Node* currentMachine = head; int ii = 0;
@@ -370,6 +374,8 @@ void RingDHT::removeFile() {
 	int machineKey = 0; bool flag = false;
 	do {
 		flag = false;
+		allMachineKeys();
+		cout << endl;
 		cout << "> Enter the Machine (Key) to remove the File from." << endl;
 		cin >> machineKey;
 		currentMachine = head; int ii = 0;
@@ -408,7 +414,7 @@ void RingDHT::removeFile() {
 }
 
 string RingDHT::getRandomName() {
-	string list[20] = { "hub","tech","code","MCL (Maria Cooperation Limited)", "Zirwah K Organization", "One Piece", "FTN", "Lava Swimmer", "Pastry", "Mario", "DataStr", "TechComp", "AOT", "TR", "SanjiLimited", "Yowaimo", "Vinland", "FASTNUCES", "ClockServices", "WebNovel" };
+	string list[20] = { "hub","tech","code","MCL (Maria Cooperation Limited)", "movies7", "One Piece", "FTN", "Lava Swimmer", "Pastry", "Winx", "DataStr", "TechComp", "AOT", "TR", "SanjiLimited", "Yowaimo", "Vinland", "FASTNUCES", "ClockServices", "WebNovel" };
 	string returnName = list[rand() % 20];
 
 	return returnName;
@@ -461,7 +467,7 @@ void RingDHT::insertMachine() {
 
 	current->isMachine = true;
 	current->key = hash;
-	current->value.content = key;
+	current->value.content = getRandomName();
 
 	CreateTable(); //update routing tables of machines
 	if (nextMachine->btree.root) {
@@ -484,6 +490,8 @@ void RingDHT::deleteMachine() {
 	//Case:
 	//1. the machine's btree is empty
 	//2. not empty (transfer all the to the next machine)
+	allMachineKeys();
+	cout << endl;
 	cout << "> Enter Machine Key: " << endl;
 	int key;
 	cin >> key;
@@ -587,6 +595,7 @@ void RingDHT::PrintTables(){
 		else
 			flag = true;
 	} while (flag);
+	PressEnterToProceed();
 }
 
 void RingDHT::PrintTable(Node* curr) {
@@ -703,6 +712,8 @@ void RingDHT::getFilePath() {
 	int machineKey = 0; bool flag = false;
 	do {
 		flag = false;
+		allMachineKeys();
+		cout << endl;
 		cout << "> Enter the Machine (Key) to search the File from." << endl;
 		cin >> machineKey;
 		currentMachine = head; int ii = 0;
@@ -768,4 +779,17 @@ void RingDHT::getInfo() {
 	cout << "===================================================" << endl;
 
 	PressEnterToProceed();
+}
+
+void RingDHT::allMachineKeys() {
+	cout << "Machine Keys:" << endl;
+	cout << "-----------------------------------------" << endl;
+	Node* current = head;
+	do {
+		if (current->isMachine)
+			cout << "Machine_" << current->indx << endl;
+		current = current->next;
+	} while (current != head);
+	cout << "-----------------------------------------" << endl;
+
 }
