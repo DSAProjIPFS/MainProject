@@ -143,7 +143,7 @@ public:
 	void getFilePath();
 
 	void allMachineKeys();
-	
+
 	void getInfo();
 };
 
@@ -283,7 +283,7 @@ void RingDHT::manualAssignMachines() {
 }
 
 void RingDHT::insertFile() {
-//File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
+	//File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
 	int machineKey = 0; bool flagg = false;
 	do {
 		flagg = false;
@@ -361,7 +361,7 @@ void RingDHT::insertFile() {
 		return;
 	}
 	cout << "------------------------------" << endl;
-	cout << "> Managed by Machine_\"" << currenttMachine->value.content << "\"" <<" [Key: "<<currenttMachine->indx<<"]"<< endl;
+	cout << "> Managed by Machine_\"" << currenttMachine->value.content << "\"" << " [Key: " << currenttMachine->indx << "]" << endl;
 	currenttMachine->btree.insert(fileKey, path); //store value where <?>
 	cout << "------------------------------------------------------------------" << endl;
 	cout << "Insert Successful, Hash:" << fileKey << "::" << SHAhash << endl;
@@ -403,7 +403,7 @@ void RingDHT::removeFile() {
 		prevMachine = prevMachine->prev;
 	}
 	int prevKey = prevMachine->indx;
-	
+
 	if (key <= currentMachine->indx && key > prevMachine->indx) {
 		cout << "> Present in current Machine. . ." << endl;
 		currentMachine->btree.remove(key);
@@ -539,11 +539,11 @@ void RingDHT::deleteMachine() {
 		current->isMachine = false;
 		NumberOfMachines--;
 		CreateTable();
-		
+
 		cout << "> Machine\"" << key << "\" removed Successfully" << endl;
 		PressEnterToProceed();
 		return;
-		
+
 	}
 
 }
@@ -576,7 +576,7 @@ void RingDHT::showDirectories() {
 	}
 }
 
-void RingDHT::PrintTables(){
+void RingDHT::PrintTables() {
 	cout << "1. Print Routing Table of All Machines" << endl << "2. Print Routing Table of A Single Machine" << endl;
 	bool flag = false; int c;
 	do {
@@ -630,6 +630,9 @@ Node* RingDHT::FindTableElements(Node* curr) {
 }
 
 Node* RingDHT::Recurrsion(Node* Start, int find) {
+	if (Start->key == find) {
+		return Start;
+	}
 	do {
 		if (Start->key < find && find < Start->TableArr[0]->key) {
 			Start = Start->TableArr[0];
@@ -646,7 +649,7 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 				}
 			}
 		}
-					cout << ">>> Machine_" << Start->indx << endl;
+		cout << ">>> Machine_" << Start->indx << endl;
 	} while ((Start->key < find));
 	//cout << Start->key << ;
 	return Start;
@@ -707,7 +710,7 @@ void RingDHT::printMachineBtree() {
 			flag = true;
 		}
 	} while (flag);
-	cout << "B-Tree of Machine_"<<key << endl;
+	cout << "B-Tree of Machine_" << key << endl;
 	printBTree(&current->btree);
 
 	return;
@@ -741,7 +744,7 @@ void RingDHT::getFilePath() {
 	}
 
 	//case 1: file is present in the current Machine
-	if ((key <= currentMachine->indx && key>prevMachine->indx) && SearchHelper(currentMachine->btree.root, key)) {
+	if ((key <= currentMachine->indx && key > prevMachine->indx) && SearchHelper(currentMachine->btree.root, key)) {
 		if (!SearchHelper(currentMachine->btree.root, key)) {
 			cout << "> Key does not exist" << endl;
 			PressEnterToProceed();
@@ -761,9 +764,9 @@ void RingDHT::getFilePath() {
 	else {//case 2: not present in the current Machine; use routing table to find
 		cout << "> Not Present in the current Machine " << endl;
 		cout << "> Using Routing Table " << endl << endl;
-		Node* designatedMachine = SearchingFromTable(machineKey,key);
+		Node* designatedMachine = SearchingFromTable(machineKey, key);
 		cout << "------------------------------------" << endl;
-		
+
 		if (!designatedMachine->btree.root || !SearchHelper(designatedMachine->btree.root, key)) {
 			cout << "> Key does not exist" << endl;
 			PressEnterToProceed();
@@ -772,7 +775,7 @@ void RingDHT::getFilePath() {
 		cout << "Present in Machine_" << designatedMachine->indx << endl;
 		cout << "Path of the File [Key_" << key << "] :" << endl << endl;
 		stack <string> resPath;
-		getPath(designatedMachine->btree, key,resPath);
+		getPath(designatedMachine->btree, key, resPath);
 		while (!resPath.empty()) {
 			cout << "\"" << resPath.top() << "\"" << endl << endl;
 			resPath.pop();
