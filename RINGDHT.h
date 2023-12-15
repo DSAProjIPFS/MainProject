@@ -347,9 +347,11 @@ void RingDHT::insertFile() {
 		cout << fileContent << endl << endl;
 	}
 	int total = pow(2, identifier_space);
-	long long int fileKey = getHash(fileContent);
-	long long int SHAhash = fileKey;
+	long long int fileKey = abs(getHash(fileContent));
+	long long int SHAhash = abs(fileKey);
 	fileKey = fileKey % total;
+
+
 
 	cout << "> Storing on Node_" << fileKey << endl;
 	//use of routing to table to get at the designated node
