@@ -23,7 +23,7 @@ public:
 	BTreeNode** child;
 	bool isLeaf;
 
-
+	//------------------ FUNCTIONS -----------------------//
 	BTreeNode() {
 		size = 4; // Default (?)
 		min = (size + 1) / 2;
@@ -44,19 +44,14 @@ public:
 		currsize = 0;
 	}
 
-	void traverse()
-	{
+	void traverse(){
 		int i;
 		for (i = 0; i < currsize; i++)
 		{
-			// If this is not leaf, then before printing key[i],
-			// traverse the subtree rooted with child C[i].
 			if (isLeaf == false)
 				child[i]->traverse();
 			cout << " " << keys[i];
 		}
-
-		// Print the subtree rooted with last child
 		if (isLeaf == false) {
 			child[i]->traverse();
 		}
@@ -281,6 +276,7 @@ public:
 		}
 		return curr->keys[curr->currsize - 1];
 	}
+
 	string getPredecessorPath(int indx) {
 		BTreeNode* curr = child[indx];
 		while (!curr->isLeaf) {
@@ -319,7 +315,7 @@ public:
 				mergeNodes(indx - 1);
 		}
 	}
-	//adding more comments (above) later for better understanding, cope with it for now 
+
 	void borrowfromLeftSibling(int indx) {
 		for (int i = child[indx]->currsize - 1; i >= 0; i--) { //moving keys one index ahead (to free space for the borrowed one at 0th index)
 			child[indx]->keys[i + 1] = child[indx]->keys[i];
@@ -365,7 +361,6 @@ public:
 		child[indx]->currsize++; //the filled node now has one more value
 		child[indx - 1]->currsize--; //the node from which the value is borrowed now has one less
 	}
-
 };
 
 class BTree {
@@ -378,6 +373,7 @@ public:
 		this->size = size;
 		root = nullptr;
 	}
+
 	void insert(int k, const string& directory)
 	{
 		if (root == NULL)
@@ -414,9 +410,6 @@ public:
 			}
 		}
 	}
-
-
-
 
 	void remove(int key)
 	{
@@ -512,8 +505,6 @@ public:
 		return x;
 	}
 
-
-
 };
 
 void rootCheck(BTree* &b) {
@@ -549,6 +540,7 @@ void printBTree(BTree* btree) {
 		cout << "The B-tree is empty." << endl;
 	}
 }
+
 bool SearchHelper(BTreeNode* node, int key) {
 	if (node != nullptr) {
 		for (int i = 0; i < node->currsize; ++i) {
@@ -576,8 +568,6 @@ void SearchBTree(BTree btree, int key) {
 		cout << "Element Not Found\n";
 	}
 }
-
-
 
 void getPathHelper(BTreeNode* node, int key, stack<string> &paths) {
 	if (node != nullptr) {
