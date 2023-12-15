@@ -147,7 +147,9 @@ public:
 	void getInfo();
 };
 
+//=================IMPLEMENTATIONS====================//
 void RingDHT::createDHT(int idspace, int machines) {
+	//creates a ring-dht on default values or user provided values (Identifier Space)
 	int total = pow(2, idspace);
 	cout << "-------------------------------------" << endl;
 	cout << "Identifier Space: " << idspace << "(" << total << ")" << endl;
@@ -729,8 +731,13 @@ void RingDHT::getFilePath() {
 	cout << "> Enter the key of the File: " << endl;
 	cin >> key;
 
+	Node* prevMachine = currentMachine->prev;
+	while (!prevMachine->isMachine) {
+		prevMachine = prevMachine->prev;
+	}
+
 	//case 1: file is present in the current Machine
-	if (key <= currentMachine->indx && SearchHelper(currentMachine->btree.root, key)) {
+	if ((key <= currentMachine->indx && key>prevMachine->indx) && SearchHelper(currentMachine->btree.root, key)) {
 		if (!SearchHelper(currentMachine->btree.root, key)) {
 			cout << "> Key does not exist" << endl;
 			PressEnterToProceed();
@@ -752,8 +759,8 @@ void RingDHT::getFilePath() {
 		cout << "> Using Routing Table " << endl << endl;
 		Node* designatedMachine = SearchingFromTable(machineKey,key);
 		cout << "------------------------------------" << endl;
-
-		if (!SearchHelper(designatedMachine->btree.root, key)) {
+		
+		if (!designatedMachine->btree.root || !SearchHelper(designatedMachine->btree.root, key)) {
 			cout << "> Key does not exist" << endl;
 			PressEnterToProceed();
 			return;
