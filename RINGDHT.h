@@ -699,6 +699,8 @@ void RingDHT::PrintOnlyOne() {
 	Node* Start = head;
 	do {
 		flag = false;
+		allMachineKeys();
+		cout << endl;
 		cout << "\n> Enter the key of the Machine [Routing Table Print] " << endl;;
 		int x;
 		cin >> x;
