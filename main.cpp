@@ -15,12 +15,12 @@ void startScreen() {
 	cout << "                                          #   #   #  ##      ##" << endl;
 	cout << "                                          #   #####  ######  ######" << endl;
 	cout << "                                          #   ##     ##          ##" << endl;
-	cout << "                                         ###  ##     ##      ######" << endl << endl;
-
+	cout << "                                         ###  ##     ##      ######" << endl << endl;;
+	cout << "                                         InterPlanetary File System" << endl << endl;
 	cout << "                                  Project by i22-0812 | i22-2123 | i22-8222" << endl << endl;
 	cout << "========================================================================================================================" << endl << endl;
 	this_thread::sleep_for(chrono::seconds(1));
-	cout << "                                              Press [Enter] to Proceed" << endl << endl;
+	cout << "                                         Press [Enter] to Proceed" << endl << endl;
 	_getch();
 	system("cls");
 	HANDLE hhConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -31,11 +31,12 @@ void MainMenu(RingDHT* DHT) {
 	//some options are just for us (to see the current status) (options 6 & 7) ;; will remove later if needed
 	while (1) {
 		int choice = 0;
-		do {/*
-			cin.clear();
+		do {
+			/*cin.clear();
 			cin.ignore(MAX_BUFFER_SIZE, '\n'); */
 			cout << "\n=============================================" << endl;
 			cout << "> Options" << endl;
+			cout << "---------------------------------------------" << endl;
 			cout << "1. Insert File" << endl;
 			cout << "2. Remove File" << endl;
 			cout << "3. Print Routing Table" << endl;
@@ -52,7 +53,9 @@ void MainMenu(RingDHT* DHT) {
 		} while (choice > 10 && choice != 0);
 
 		switch (choice) {
-		case 0: cout << "Exiting . . ." << endl; return;
+		case 0: cout << "Exiting . . ." << endl; 
+			this_thread::sleep_for(chrono::seconds(1));
+			return;
 			break;
 		case 1:
 			DHT->insertFile(); //fully working
@@ -71,6 +74,7 @@ void MainMenu(RingDHT* DHT) {
 			break;
 		case 6:
 			DHT->showNodes();
+			break;
 		case 7:
 			DHT->printMachineBtree(); //fully wok
 			break;
@@ -81,20 +85,13 @@ void MainMenu(RingDHT* DHT) {
 			DHT->getInfo();
 			break;
 		}
-
 	}
-
-
 }
 
 
 int main() {
-	
 	startScreen();
 	RingDHT DHT;
 	MainMenu(&DHT);
 	return 0;
-
-	
-
 }
