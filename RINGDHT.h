@@ -691,6 +691,8 @@ void RingDHT::printMachineBtree() {
 	long long int key; bool flag = false; Node* current;
 	do {
 		flag = false;
+		allMachineKeys();
+		cout << endl;
 		cout << "> Enter the Key of The Machine" << endl;
 		cin >> key;
 		current = head; long long int i = 0;
