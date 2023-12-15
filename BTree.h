@@ -176,6 +176,39 @@ public:
 		int indx = KeyIndx(k);
 		if (isKey(k)) { //present in this node 
 			if (isLeaf) {
+				if (paths[indx].next) {
+					//linked list exist
+					int count = 1; int ch;
+					cout << "> Multiple Paths Found! Select the one to remove." << endl;
+					Directory* current = &paths[indx];
+					do {
+						cout << count++ << ". " << current->path << endl;
+						current = current->next;
+					} while (current);
+					current = &paths[indx];
+					cin >> ch;
+					if (ch > count) {
+						cout << "> Wrong Input" << endl;
+					}
+					ch--;
+					if (!ch) {
+						paths[indx] = *paths[indx].next;
+						return;
+					}
+					else {
+						int i = 0;
+						while (i < ch) {
+							current = current->next;
+						}
+						if (current->next)
+							current->next = current->next->next;
+						else
+							current->next = NULL;
+						return;
+
+					}
+
+				}
 				int n = indx + 1;
 				while (n < currsize) {
 					keys[n - 1] = keys[n];
