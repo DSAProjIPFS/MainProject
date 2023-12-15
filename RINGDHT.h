@@ -33,17 +33,14 @@ struct value {
 class Node {
 public:
 	long long int key; //hash value
-	value value; //actual content of whatever txt file
-	/*
-	Machine -> hashed value generated from its name i.e google.com
-	Data -> hashed value generated from its content i.e txt file content
-	*/
+	value value; //actual content of whatever txt file + its path
 	int indx;
 	BTree btree;
 	bool isMachine;
 	Node* next;
 	Node* prev;
 	Node** TableArr = nullptr;
+
 	Node() {
 		isMachine = false;
 		key = 0; value.content = '0';
@@ -58,6 +55,11 @@ public:
 	}
 
 };
+
+/*
+Machine -> hashed value generated from its name i.e google.com
+Data -> hashed value generated from its content i.e txt file content
+*/
 
 class RingDHT {
 public:
@@ -104,7 +106,7 @@ public:
 
 	void createDHT(int idspace, int machines);
 
-	void showNodes(); //displays each node and its flag (machine or nah)
+	void showNodes();
 
 	void randomizeMachines();
 
@@ -112,13 +114,13 @@ public:
 
 	void insertFile();
 
+	void removeFile();
+
 	string getRandomName();
 
 	void insertMachine();
 
 	void deleteMachine();
-
-	void removeFile();
 
 	void showDirectories();
 
@@ -142,6 +144,7 @@ public:
 	
 	void getInfo();
 };
+
 void RingDHT::createDHT(int idspace, int machines) {
 	int total = pow(2, idspace);
 	cout << "-------------------------------------" << endl;
@@ -275,8 +278,8 @@ void RingDHT::manualAssignMachines() {
 	system("cls");
 }
 
-//File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
 void RingDHT::insertFile() {
+//File insertion: -> ask user for the starting machine, -> Ask for the file directory, ->generate the sha1 hash and its modulus, ->use routing to get to the machine to be stored in
 	int machineKey = 0; bool flagg = false;
 	do {
 		flagg = false;
@@ -361,7 +364,48 @@ void RingDHT::insertFile() {
 	PressEnterToProceed();
 }
 
+void RingDHT::removeFile() {
+	//for a starter, we'll be randomizing the current machine from which user is searching
+	Node* currentMachine;
+	int machineKey = 0; bool flag = false;
+	do {
+		flag = false;
+		cout << "> Enter the Machine (Key) to remove the File from." << endl;
+		cin >> machineKey;
+		currentMachine = head; int ii = 0;
+		while (ii < machineKey) {
+			currentMachine = currentMachine->next;  ii++;
+		}
+		if (!currentMachine->isMachine) {
+			cout << "> The key you entered is not affiliated with any Machine. Try again." << endl;
+			flag = true;
+		}
+	} while (flag);
+	int key;
+	cout << "> Current Machine Node: " << machineKey << endl;
+	cout << "> Enter the Key of The File to remove: " << endl;
+	cin >> key;
+	//there may be a possibility that the key doesn't exist (in that case direct to the start)
 
+	//case 1 - current machine contains the key i.e key<=machine_key
+	Node* prevMachine = currentMachine->prev;
+	while (!prevMachine->isMachine) {
+		prevMachine = prevMachine->prev;
+	}
+	int prevKey = prevMachine->indx;
+	
+	if (key <= currentMachine->indx && key > prevMachine->indx) {
+		cout << "> Present in current Machine. . ." << endl;
+		currentMachine->btree.remove(key);
+	}
+	//routing...
+	cout << "> Not present in current Machine, Routing to the next machines. . ." << endl;
+	Node* designatedMachine = SearchingFromTable(machineKey, key);
+	designatedMachine->btree.remove(key);
+	cout << "File Removed Successfully." << endl;
+	PressEnterToProceed();
+
+}
 
 string RingDHT::getRandomName() {
 	string list[20] = { "hub","tech","code","MCL (Maria Cooperation Limited)", "Zirwah K Organization", "One Piece", "FTN", "Lava Swimmer", "Pastry", "Mario", "DataStr", "TechComp", "AOT", "TR", "SanjiLimited", "Yowaimo", "Vinland", "FASTNUCES", "ClockServices", "WebNovel" };
@@ -415,26 +459,23 @@ void RingDHT::insertMachine() {
 	while (!nextMachine->isMachine)
 		nextMachine = nextMachine->next;
 
-	/*while (!prevMachine->isMachine)
-		prevMachine = prevMachine->prev;*/
-
-
-
 	current->isMachine = true;
 	current->key = hash;
 	current->value.content = key;
 
 	CreateTable(); //update routing tables of machines
-	stack<long long int> vals;
-	stack<string> paths;
-	nextMachine->btree.getValuesLess(hash, vals, paths);
-	if (nextMachine->btree.root->currsize == 0)
-		nextMachine->btree.root = NULL;
-	while (!vals.empty()) {
-		current->btree.insert(vals.top(),paths.top());
-		vals.pop(); paths.pop();
+	if (nextMachine->btree.root) {
+		stack<long long int> vals;
+		stack<string> paths;
+		nextMachine->btree.getValuesLess(hash, vals, paths);
+		if (nextMachine->btree.root->currsize == 0)
+			nextMachine->btree.root = NULL;
+		while (!vals.empty()) {
+			current->btree.insert(vals.top(), paths.top());
+			vals.pop(); paths.pop();
+		}
 	}
-	cout << "> Machine\"" << key << "\" inserted Successfully" << endl;
+	cout << "> Machine\"" << hash << "\" inserted Successfully" << endl;
 	PressEnterToProceed();
 	return;
 }
@@ -467,6 +508,7 @@ void RingDHT::deleteMachine() {
 		cout << "> Machine \"" << key << "\" removed successfully" << endl;
 		NumberOfMachines--;
 		CreateTable();
+		PressEnterToProceed();
 		return;
 	}
 	else {
@@ -494,6 +536,20 @@ void RingDHT::deleteMachine() {
 
 }
 
+void RingDHT::CreateTable() {
+	Node* curr = head;
+	if (head != nullptr)
+		do
+		{
+			if (curr->isMachine) {
+				curr = FindTableElements(curr);
+				// PrintTable(curr);
+			}
+			curr = curr->next;
+		} while (curr != head);
+		return;
+}
+
 void RingDHT::showDirectories() {
 	Node* current = head; bool flag = false;
 	//for now i'll just traverse thru the RingDHT, will change it to Btree traversing later (as the paths will be stored in btree)
@@ -506,49 +562,6 @@ void RingDHT::showDirectories() {
 		if (!flag)
 			cout << "> No File in the System" << endl;
 	}
-}
-
-void RingDHT::removeFile() {
-	//for a starter, we'll be randomizing the current machine from which user is searching
-	Node* currentMachine;
-	int machineKey = 0; bool flag = false;
-	do {
-		flag = false;
-		cout << "> Enter the Machine (Key) to remove the File from." << endl;
-		cin >> machineKey;
-		currentMachine = head; int ii = 0;
-		while (ii < machineKey) {
-			currentMachine = currentMachine->next;  ii++;
-		}
-		if (!currentMachine->isMachine) {
-			cout << "> The key you entered is not affiliated with any Machine. Try again." << endl;
-			flag = true;
-		}
-	} while (flag);
-	int key;
-	cout << "> Current Machine Node: " << machineKey << endl;
-	cout << "> Enter the Key of The File to remove: " << endl;
-	cin >> key;
-	//there may be a possibility that the key doesn't exist (in that case direct to the start)
-
-	//case 1 - current machine contains the key i.e key<=machine_key
-	Node* prevMachine = currentMachine->prev;
-	while (!prevMachine->isMachine) {
-		prevMachine = prevMachine->prev;
-	}
-	int prevKey = prevMachine->indx;
-	
-	if (key <= currentMachine->indx && key > prevMachine->indx) {
-		cout << "> Present in current Machine. . ." << endl;
-		currentMachine->btree.remove(key);
-	}
-	//routing...
-	cout << "> Not present in current Machine, Routing to the next machines. . ." << endl;
-	Node* designatedMachine = SearchingFromTable(machineKey, key);
-	designatedMachine->btree.remove(key);
-	cout << "File Removed Successfully." << endl;
-	PressEnterToProceed();
-
 }
 
 void RingDHT::PrintTables(){
@@ -564,7 +577,7 @@ void RingDHT::PrintTables(){
 					PrintTable(current);
 				current = current->next;
 			}
-			if (current)
+			if (current->isMachine)
 				PrintTable(current);
 		}
 		else if (c == 2) {
@@ -575,7 +588,6 @@ void RingDHT::PrintTables(){
 			flag = true;
 	} while (flag);
 }
-
 
 void RingDHT::PrintTable(Node* curr) {
 	cout << "Routing Table for Machine " << curr->key << endl;
@@ -604,20 +616,6 @@ Node* RingDHT::FindTableElements(Node* curr) {
 	return curr;
 }
 
-void RingDHT::CreateTable() {
-	Node* curr = head;
-	if (head != nullptr)
-		do
-		{
-			if (curr->isMachine) {
-				curr = FindTableElements(curr);
-				// PrintTable(curr);
-			}
-			curr = curr->next;
-		} while (curr != head);
-		return;
-}
-
 Node* RingDHT::Recurrsion(Node* Start, int find) {
 	do {
 		if (Start->key < find && find < Start->TableArr[0]->key) {
@@ -642,7 +640,6 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 
 }
 
-// This is the main function
 Node* RingDHT::SearchingFromTable(int start, int find) {
 
 	Node* Start = head;
@@ -772,4 +769,3 @@ void RingDHT::getInfo() {
 
 	PressEnterToProceed();
 }
-
