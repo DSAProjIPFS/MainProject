@@ -631,7 +631,8 @@ Node* RingDHT::FindTableElements(Node* curr) {
 // 5 5 5 11 , searching 1, 1 isnt greater than any
 Node* RingDHT::Recurrsion(Node* Start, int find) {
 	int StartMachine = Start->key;
-	int count = 0; bool flag = false;
+	int min = Start->key;
+	int count = 0; bool flag = false; bool repeat = false;
 	if (Start->key == find) {
 		return Start;
 	}
@@ -640,6 +641,9 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 		count = 0;
 		if (Start->key < find && find < Start->TableArr[0]->key) {
 			Start = Start->TableArr[0];
+			if (min > Start->key) 
+				min = Start->key;
+			
 		}
 		else {
 			for (int i = 0; i < identifier_space; i++) {
@@ -648,10 +652,14 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 					flag = true;
 				if (i + 1 == identifier_space) {
 					Start = Start->TableArr[i];
+					if (min > Start->key) 
+						min = Start->key;
 					break;
 				}
 				else if (Start->TableArr[i]->key < find && find < Start->TableArr[i + 1]->key) {
 					Start = Start->TableArr[i];
+					if (min > Start->key) 
+						min = Start->key;
 					break;
 				}
 				count++;
@@ -659,7 +667,9 @@ Node* RingDHT::Recurrsion(Node* Start, int find) {
 			}
 		}
 		cout << ">>> Machine_" << Start->indx << endl;
-		if (Start->key == StartMachine) {
+		if (Start->key == StartMachine)
+			repeat = true;
+		if (Start->key==min && repeat) {
 			break;
 		}
 	} while ((Start->key < find || flag));
